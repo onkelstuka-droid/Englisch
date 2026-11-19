@@ -250,7 +250,9 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
+const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
+const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
   en: { name: "Englisch", code: "EN", store: "vokabelheft_en_v1", probe: "Nice to meet you." },
   tl: { name: "Tagalog", code: "TL", store: "vokabelheft_tl_v1", probe: "Magandang umaga po." }
@@ -1582,6 +1584,10 @@ function settingsHtml() {
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Töne bei richtig / falsch</div>${seg("sfx", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Tagesziel</div>${seg("goal", [["30", "30 XP"], ["50", "50 XP"], ["100", "100 XP"], ["150", "150 XP"]])}<span class="hint">Eine Runde bringt etwa 80–120 XP.</span></div>
+  <div class="setrow"><div class="label">App weiterempfehlen</div>
+    <a class="go green" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" href="${esc("https://wa.me/?text=" + encodeURIComponent(SHARE_TEXT))}" target="_blank" rel="noopener">Per WhatsApp teilen</a>
+    <div class="two"><button class="go ghost" data-act="share">Teilen …</button><button class="go ghost" data-act="copylink">Link kopieren</button></div>
+    <span class="hint" style="overflow-wrap:anywhere">${APP_URL}</span></div>
   ${syncHtml()}
   <span class="hint">Version ${APP_VERSION} · Englisch und Tagalog</span>
   ${REF ? "" : `<div class="setrow"><div class="label">Sicherung</div>
@@ -1858,6 +1864,10 @@ function act(a, el) {
     case "hint": { const h = $("#hintTxt"); h.textContent = "Beginnt mit: " + t.item.en.split(" / ").map(x => stripArt(x.replace(/^(to|the|a|an) /i, "")).slice(0, 2) + "…").join(" oder "); return; }
     case "showde": $("#deTxt").textContent = t.item.de; return;
     case "testvoice": return say(LANGS[LANG].probe);
+    case "share":
+      if (navigator.share) { navigator.share({ title: "Vokabelheft", text: SHARE_TEXT.replace("\n" + APP_URL, ""), url: APP_URL }).catch(() => {}); return; }
+      return copyLink();
+    case "copylink": return copyLink();
     case "bak-save": return backupSave();
     case "bak-load": { const f = $("#bakFile"); f.value = ""; f.onchange = () => f.files[0] && backupLoad(f.files[0]); f.click(); return; }
     case "reset":
@@ -1955,6 +1965,11 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape" && !$("#sheet").hidden) closeSheet();
   if (e.key === "Enter" && SES && SES.answered && document.activeElement && document.activeElement.id !== "ans") { const n = $("#nextBtn"); if (n && document.activeElement !== n) { e.preventDefault(); nextTask(); } }
 });
+
+function copyLink() {
+  const done = () => toast("Link kopiert – jetzt z. B. in WhatsApp einfügen.");
+  try { navigator.clipboard.writeText(APP_URL).then(done, () => toast(APP_URL)); } catch (e) { toast(APP_URL); }
+}
 
 /* ---- backup as a file (for a new phone) ---- */
 function backupSave() {
