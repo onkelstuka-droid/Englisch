@@ -1,7 +1,7 @@
 {
- "name": "Vokabelheft Englisch",
- "short_name": "Englisch",
- "description": "Englisch lernen: Vokabeln, Hören, Schreiben, Satzbau, Grammatik und Sprechen.",
+ "name": "Vokabelheft",
+ "short_name": "Vokabelheft",
+ "description": "Englisch und Tagalog lernen: Vokabeln, Hören, Schreiben, Satzbau, Grammatik und Sprechen.",
  "lang": "de",
  "start_url": "./",
  "scope": "./",

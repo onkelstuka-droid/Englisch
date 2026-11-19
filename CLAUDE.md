@@ -1,10 +1,10 @@
-# Vokabelheft Englisch – Projektübergabe für Claude
+# Vokabelheft (Englisch + Tagalog) – Projektübergabe für Claude
 
 App-Link: https://onkelstuka-droid.github.io/Englisch/
 Repository: github.com/onkelstuka-droid/Englisch (Branch `main`, GitHub Pages aus `/ (root)`)
 Nutzer: **Hans-Jürgen Schlichting** (spricht Deutsch, Android-Handy Pixel, kein Programmierer). Auch Idee des Schichtplaners (github.com/onkelstuka-droid/Schichtplan-).
 Umsetzung: Claude. Immer auf Deutsch antworten, einfach erklären, Schritte für das Handy beschreiben.
-Wünsche: Englisch leicht lernen, **keine Bilder** in den Übungen, Übungen, gespeicherte Erfolge und Fortschritt, Sprachausgabe.
+Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, **keine Bilder** in den Übungen, Übungen, gespeicherte Erfolge und Fortschritt, Sprachausgabe.
 
 ## Aufbau
 - `src/vokabelheft.html` – **die gesamte App in einer Datei** (HTML, CSS, JS). Nur hier ändern.
@@ -13,6 +13,13 @@ Wünsche: Englisch leicht lernen, **keine Bilder** in den Übungen, Übungen, ge
 - Gleiche Herkunft (onkelstuka-droid.github.io) wie der Schichtplaner: localStorage und Cache-Speicher werden geteilt. Deshalb eigene Präfixe: Schlüssel `vokabelheft_en_v1`, Caches `englisch-app-*` (der SW löscht nur diese). Schichtplaner nutzt `sp_*` und `schichtplan-*`.
 - Früher lag die App unter `Schichtplan-/englisch/`; dort ist jetzt nur noch eine Weiterleitung hierher und ein Service Worker, der sich selbst entfernt (löscht nur Caches `vokabelheft-*`). Der Fortschritt bleibt erhalten (gleicher localStorage).
 - Eine Version läuft zusätzlich als Claude-Artifact (claude.ai/artifact/NBC18Ru7C1xvM7S2HU9BuV, speichert dort im Claude-Konto über die `db`-Fähigkeit). Weiterentwicklung hier.
+
+## Sprachen (Englisch, Tagalog)
+- Auswahl: oben auf „Vokabelheft / Englisch ▾“ tippen (`langSheet`) oder in den Einstellungen. Speichert `vokabelheft_lang` ("en" Standard | "tl") und lädt die Seite neu (`switchLang`).
+- `LANGS` = {name, code, store, probe}. Jede Sprache hat eigenen Fortschritt: `vokabelheft_en_v1` bzw. `vokabelheft_tl_v1`. Sicherung enthält `lang` und lässt sich nur in derselben Sprache laden.
+- Inhalte: `RAW_EN`/`GCAT_EN`/`GRAM_RAW_EN` und `RAW_TL`/`GCAT_TL`/`GRAM_RAW_TL`; `RAW`, `GCAT`, `GRAM_RAW` zeigen auf die aktive Sprache. Intern heißt das Zielsprachen-Feld weiter `en` (auch bei Tagalog).
+- Tagalog: Stimme/Spracherkennung `fil-PH` (`speechLang()`), Stimmen-Filter `/^(fil|tl)/`. Englisch-Kurzformen (`CONTRACT`) und Artikel-Abschneiden nur bei Englisch; bei Tagalog wird nur ein führendes „ang “ ignoriert. Grammatik Tagalog: ang/ng/sa, Pronomen, ko/mo/niya, Verbformen (Aspekt), mga, Fragewörter, ito/iyan/iyon, Verbinder na/-ng, po/opo, may/mayroon/wala, hindi/huwag.
+- Neue Sprache: Eintrag in `LANGS`, eigene `RAW_xx`/`GCAT_xx`/`GRAM_RAW_xx`, Auswahl bei `RAW =`…, `speechLang()` und Stimmen-Filter in `pickVoice`/`useClaudeVoice` ergänzen.
 
 ## Inhalt
 - `RAW`: 17 Themen (Begrüßung, Zahlen, Wochentage & Monate, Zeit, Familie, Essen, Verben, Arbeit & Schicht, Haus, Einkaufen, Eigenschaften, Farben, Kleidung, Körper & Gesundheit, Reisen, Wetter, Freizeit), je Zeile `englisch|deutsch`, Alternativen mit „ / “. Zweiter Block je Thema = Sätze.

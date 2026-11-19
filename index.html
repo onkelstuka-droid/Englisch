@@ -7,7 +7,7 @@
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js")});</script>
 </head><body>
-<title>Vokabelheft Englisch</title>
+<title>Vokabelheft</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Caveat:wght@600;700&display=swap">
 <style>
@@ -43,7 +43,11 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 /* header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--rule)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
-.brand{display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;border-radius:10px;padding:2px 6px 2px 0}
+.brand:active{background:var(--tint)}
+.mark-sm{display:inline-block;font-family:var(--f-display);font-weight:800;font-size:13px;background:var(--blue);color:var(--on-blue);border-radius:6px;padding:3px 6px;margin-right:6px;vertical-align:1px}
+.lang-pick{grid-template-columns:1fr auto;padding:16px 14px}
+.lang-pick[aria-current]{outline:2px solid var(--blue)}
 .brand .mark{font-family:var(--f-display);font-weight:800;font-size:15px;letter-spacing:.04em;background:var(--blue);color:var(--on-blue);border-radius:8px;padding:5px 7px}
 .brand b{font-family:var(--f-display);font-weight:800;font-size:19px;display:block;line-height:1}
 .brand small{font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase}
@@ -233,7 +237,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 </style>
 
 <header class="top"><div class="wrap">
-  <div class="brand"><span class="mark">EN</span><div><b>Vokabelheft</b><small>Englisch</small></div></div>
+  <button class="brand" id="langBtn" aria-label="Sprache wechseln"><span class="mark" id="langMark">EN</span><div style="text-align:left"><b>Vokabelheft</b><small id="langName">Englisch ▾</small></div></button>
   <div class="top-r">
     <span class="chip" id="hdrStreak" title="Tage in Folge gelernt">0 Tage</span>
     <button class="icon-btn" id="setBtn" aria-label="Einstellungen"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></button>
@@ -254,8 +258,19 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 <div id="toast" hidden></div>
 
 <script>
+/* ======================= LANGUAGE ======================= */
+const LANGS = {
+  en: { name: "Englisch", code: "EN", store: "vokabelheft_en_v1", probe: "Nice to meet you." },
+  tl: { name: "Tagalog", code: "TL", store: "vokabelheft_tl_v1", probe: "Magandang umaga po." }
+};
+let LANG = "en";
+try { const l = localStorage.getItem("vokabelheft_lang"); if (LANGS[l]) LANG = l; } catch (e) {}
+const LN = LANGS[LANG].name;
+function switchLang(l) { if (!LANGS[l] || l === LANG) return closeSheet(); try { localStorage.setItem("vokabelheft_lang", l); } catch (e) {} location.reload(); }
+
 /* ======================= CONTENT ======================= */
-const RAW = [
+/* ---------- Englisch ---------- */
+const RAW_EN = [
 ["greet","Begrüßung & Smalltalk",`hello / hi|hallo
 good morning|guten Morgen
 good evening|guten Abend
@@ -667,7 +682,7 @@ I play football on Sundays.|Ich spiele sonntags Fußball.
 Do you want to dance?|Möchtest du tanzen?`]
 ];
 
-const GCAT = {
+const GCAT_EN = {
   be:["to be (am / is / are)","I am · he / she / it is · you / we / they are."],
   have:["have / has","I / you / we / they have · he / she / it has."],
   pres:["Simple Present","Bei he / she / it bekommt das Verb ein -s: she works. Verneinung mit don't / doesn't, Frage mit do / does."],
@@ -683,7 +698,7 @@ const GCAT = {
   there:["there is / there are","there is + Einzahl · there are + Mehrzahl."],
   pron:["Pronomen","he = er, she = sie. Als Objekt: me, him, her, us, them."]
 };
-const GRAM_RAW = `be|I ___ from Germany.|am|is,are|Ich komme aus Deutschland.
+const GRAM_RAW_EN = `be|I ___ from Germany.|am|is,are|Ich komme aus Deutschland.
 be|She ___ my sister.|is|am,are|Sie ist meine Schwester.
 be|We ___ at work.|are|is,am|Wir sind auf der Arbeit.
 be|They ___ very nice.|are|is,am|Sie sind sehr nett.
@@ -735,6 +750,478 @@ pron|This is my sister. ___ is a doctor.|She|He,Her|Das ist meine Schwester. Sie
 pron|Can you help ___?|me|I,my|Kannst du mir helfen?
 pron|I know ___. He is my neighbour.|him|he,his|Ich kenne ihn. Er ist mein Nachbar.`;
 
+
+/* ---------- Tagalog ---------- */
+const RAW_TL = [
+["greet","Begrüßung & Smalltalk",`kumusta|hallo / wie geht's
+magandang umaga|guten Morgen
+magandang hapon|guten Tag (am Nachmittag)
+magandang gabi|guten Abend
+paalam|auf Wiedersehen
+salamat|danke
+maraming salamat|vielen Dank
+walang anuman|gern geschehen
+pakiusap|bitte (wenn man um etwas bittet)
+pasensya na|Entschuldigung
+oo|ja
+opo|ja (höflich)
+hindi|nein / nicht
+Kumusta ka?|Wie geht es dir?
+Mabuti naman, salamat.|Mir geht es gut, danke.
+Ano ang pangalan mo?|Wie heißt du?
+Taga-saan ka?|Woher kommst du?
+ingat ka|pass auf dich auf
+Hindi ko naiintindihan.|Ich verstehe nicht.`,
+`Ikinagagalak kitang makilala.|Freut mich, dich kennenzulernen.
+Ang pangalan ko ay Tom.|Ich heiße Tom.
+Taga-Alemanya ako.|Ich komme aus Deutschland.
+Pakiulit po.|Bitte wiederholen Sie das.
+Pakibagalan po ang pagsasalita.|Bitte sprechen Sie langsamer.
+Magandang araw po!|Einen schönen Tag!`],
+["numbers","Zahlen",`isa|eins
+dalawa|zwei
+tatlo|drei
+apat|vier
+lima|fünf
+anim|sechs
+pito|sieben
+walo|acht
+siyam|neun
+sampu|zehn
+labing-isa|elf
+labindalawa|zwölf
+labintatlo|dreizehn
+dalawampu|zwanzig
+tatlumpu|dreißig
+limampu|fünfzig
+isang daan / sandaan|hundert
+isang libo / sanlibo|tausend
+una|erste
+pangalawa / ikalawa|zweite
+pangatlo / ikatlo|dritte
+kalahati|die Hälfte`,
+`Limampung taon na ako.|Ich bin fünfzig Jahre alt.
+May dalawa akong anak.|Ich habe zwei Kinder.
+Sampung euro ito.|Das kostet zehn Euro.
+Kailangan namin ng tatlong tiket.|Wir brauchen drei Fahrkarten.
+Unang beses ko rito.|Ich bin zum ersten Mal hier.`],
+["days","Wochentage & Monate",`Lunes|Montag
+Martes|Dienstag
+Miyerkules|Mittwoch
+Huwebes|Donnerstag
+Biyernes|Freitag
+Sabado|Samstag
+Linggo|Sonntag
+Enero|Januar
+Pebrero|Februar
+Marso|März
+Abril|April
+Mayo|Mai
+Hunyo|Juni
+Hulyo|Juli
+Agosto|August
+Setyembre|September
+Oktubre|Oktober
+Nobyembre|November
+Disyembre|Dezember`,
+`Lunes ngayon.|Heute ist Montag.
+Sa Hunyo ang kaarawan ko.|Mein Geburtstag ist im Juni.
+Nagtatrabaho ako sa Sabado.|Ich arbeite am Samstag.
+Kita tayo sa Biyernes!|Bis Freitag!
+Sa Disyembre ang Pasko.|Weihnachten ist im Dezember.`],
+["time","Zeit & wie oft",`ngayon|jetzt / heute
+bukas|morgen
+kahapon|gestern
+mamaya|später
+maaga|früh
+huli|spät / zu spät
+umaga|der Morgen
+hapon|der Nachmittag
+gabi|der Abend / die Nacht
+oras|die Stunde / die Uhrzeit
+minuto|die Minute
+araw|der Tag
+linggo|die Woche
+buwan|der Monat
+taon|das Jahr
+lagi / palagi|immer
+madalas|oft
+minsan|manchmal
+hindi kailanman|nie`,
+`Anong oras na?|Wie spät ist es?
+Alas siyete y medya na.|Es ist halb acht.
+Pasensya na, huli ako.|Entschuldigung, ich bin zu spät.
+Lagi akong gumigising nang maaga.|Ich stehe immer früh auf.
+Kita tayo bukas.|Bis morgen.`],
+["family","Familie & Menschen",`nanay / ina|die Mutter
+tatay / ama|der Vater
+mga magulang|die Eltern
+kapatid na lalaki|der Bruder
+kapatid na babae|die Schwester
+kuya|großer Bruder (Anrede)
+ate|große Schwester (Anrede)
+anak na lalaki|der Sohn
+anak na babae|die Tochter
+anak|das Kind (Sohn oder Tochter)
+mga bata|die Kinder
+asawa|der Ehepartner (Frau oder Mann)
+lola|die Oma
+lolo|der Opa
+tito / tiyo|der Onkel
+tita / tiya|die Tante
+pinsan|der Cousin / die Cousine
+kaibigan|der Freund / die Freundin
+kapitbahay|der Nachbar / die Nachbarin
+sanggol|das Baby
+pamilya|die Familie`,
+`Ito ang asawa ko.|Das ist meine Frau.
+Nakatira sa Munich ang anak kong lalaki.|Mein Sohn wohnt in München.
+May dalawa akong kapatid na lalaki.|Ich habe zwei Brüder.
+Nagbabakasyon ang mga magulang ko.|Meine Eltern sind im Urlaub.
+Siya ang matalik kong kaibigan.|Sie ist meine beste Freundin.`],
+["food","Essen & Trinken",`kanin|der Reis (gekocht)
+tinapay|das Brot
+keso|der Käse
+itlog|das Ei
+karne|das Fleisch
+isda|der Fisch
+manok|das Huhn / das Hähnchen
+patatas|die Kartoffel
+gulay|das Gemüse
+prutas|das Obst
+mansanas|der Apfel
+saging|die Banane
+tubig|das Wasser
+kape|der Kaffee
+tsaa|der Tee
+gatas|die Milch
+serbesa|das Bier
+almusal|das Frühstück
+tanghalian|das Mittagessen
+hapunan|das Abendessen
+gutom|hungrig
+uhaw|durstig
+masarap|lecker`,
+`Isang kape nga po.|Einen Kaffee, bitte.
+Gutom na ako.|Ich habe Hunger.
+Gusto mo ba ng isda?|Magst du Fisch?
+Naghahapunan kami nang alas siyete.|Wir essen um sieben zu Abend.
+Masarap ito!|Das ist lecker!
+Kain tayo!|Lass uns essen!`],
+["verbs","Wichtige Verben",`pumunta|gehen (irgendwohin)
+dumating|ankommen
+makita|sehen
+gumawa|machen
+sabihin|sagen
+malaman|wissen
+kumuha|nehmen
+magbigay|geben
+hanapin|suchen
+mag-isip|denken
+gusto|wollen / mögen
+kailangan|brauchen / müssen
+kumain|essen
+uminom|trinken
+matulog|schlafen
+tumulong|helfen
+mag-aral|lernen
+maintindihan|verstehen
+magtrabaho|arbeiten
+magsalita|sprechen
+maglakad|zu Fuß gehen`,
+`Kailangan ko ng tulong mo.|Ich brauche deine Hilfe.
+Hindi ko alam.|Ich weiß es nicht.
+Naiintindihan mo ba ako?|Verstehst du mich?
+Gusto kong mag-aral ng Tagalog.|Ich will Tagalog lernen.
+Uuwi na kami.|Wir gehen jetzt nach Hause.`],
+["work","Arbeit & Schicht",`trabaho|die Arbeit
+katrabaho|der Kollege / die Kollegin
+amo|der Chef / die Chefin
+shift|die Schicht
+shift sa umaga|die Frühschicht
+shift sa hapon|die Spätschicht
+shift sa gabi / graveyard shift|die Nachtschicht
+overtime|die Überstunden
+bakasyon|der Urlaub
+day off|der freie Tag
+pabrika|die Fabrik
+opisina|das Büro
+pahinga|die Pause
+sahod / suweldo|der Lohn / das Gehalt
+pulong|die Besprechung
+magsimula|anfangen
+matapos|fertig werden / aufhören`,
+`Panggabi ang shift ko ngayong linggo.|Ich habe diese Woche Nachtschicht.
+Day off ko bukas.|Ich habe morgen frei.
+Alas sais nagsisimula ang shift ko.|Meine Schicht beginnt um sechs.
+Magbabakasyon ako sa susunod na linggo.|Ich bin nächste Woche im Urlaub.
+Nag-overtime ako nang dalawang oras.|Ich habe zwei Überstunden gemacht.
+Puwede ba tayong magpalit ng shift?|Können wir die Schicht tauschen?`],
+["home","Haus & Wohnung",`bahay|das Haus
+apartment|die Wohnung
+kuwarto|das Zimmer
+kusina|die Küche
+banyo / CR|das Badezimmer / die Toilette
+silid-tulugan|das Schlafzimmer
+sala|das Wohnzimmer
+bakuran / hardin|der Garten
+pinto|die Tür
+bintana|das Fenster
+mesa|der Tisch
+upuan|der Stuhl
+kama|das Bett
+susi|der Schlüssel
+hagdan|die Treppe
+dingding / pader|die Wand
+bubong|das Dach
+aparador|der Schrank
+ilaw|das Licht`,
+`Napakaliit ng kusina.|Die Küche ist sehr klein.
+Nasaan ang banyo?|Wo ist das Badezimmer?
+Nakatira ako sa apartment.|Ich wohne in einer Wohnung.
+Pakisara ang bintana.|Bitte schließ das Fenster.
+Hindi ko mahanap ang mga susi ko.|Ich finde meine Schlüssel nicht.`],
+["shop","Einkaufen",`tindahan|das Geschäft / der Laden
+palengke|der Markt
+panaderya|die Bäckerei
+botika|die Apotheke
+pera|das Geld
+presyo|der Preis
+magkano|wie viel (Preis)
+mura|billig / günstig
+mahal|teuer
+bumili|kaufen
+magbayad|bezahlen
+resibo|der Kassenbon / die Quittung
+supot|die Tüte
+bukas|geöffnet / offen
+sarado|geschlossen
+sukli|das Wechselgeld
+tawad|der Rabatt (Handeln)`,
+`Magkano po ito?|Wie viel kostet das?
+Puwede po bang magbayad gamit ang card?|Kann ich mit Karte zahlen?
+Masyadong mahal iyan.|Das ist zu teuer.
+Tumitingin-tingin lang po ako.|Ich schaue nur.
+May supot po ba kayo?|Haben Sie eine Tüte?`],
+["adj","Eigenschaften",`malaki|groß
+maliit|klein
+matanda|alt (Person)
+luma|alt (Sache)
+bago|neu
+bata|jung
+mabuti|gut
+masama|schlecht
+maganda|schön
+mabilis|schnell
+mabagal|langsam
+madali|leicht / einfach
+mahirap|schwierig / arm
+masaya|glücklich / froh
+malungkot|traurig
+pagod|müde
+tama|richtig
+mali|falsch
+mahalaga|wichtig
+mahaba|lang
+maikli|kurz
+mabait|nett / lieb`,
+`Napakadali ng pagsusulit.|Der Test war sehr leicht.
+Pagod ako ngayon.|Ich bin heute müde.
+Napakahalaga nito.|Das ist sehr wichtig.
+Ang ganda ng bahay mo.|Dein Haus ist schön.
+Hindi mahirap ang Tagalog.|Tagalog ist nicht schwierig.`],
+["colors","Farben",`pula|rot
+asul / bughaw|blau
+berde / luntian|grün
+dilaw|gelb
+itim|schwarz
+puti|weiß
+kulay-abo|grau
+kayumanggi|braun
+kahel|orange
+rosas|rosa
+lila|lila
+madilim|dunkel
+kulay|die Farbe`,
+`Pula ang kotse ko.|Mein Auto ist rot.
+Asul ang langit.|Der Himmel ist blau.
+Kayumanggi ang mga mata niya.|Sie hat braune Augen.
+Gusto ko ang berde.|Ich mag Grün.`],
+["clothes","Kleidung",`damit|die Kleidung
+bestida|das Kleid
+polo|das Hemd
+kamiseta / T-shirt|das T-Shirt
+pantalon|die Hose
+palda|der Rock
+dyaket|die Jacke
+sapatos|die Schuhe
+tsinelas|die Badelatschen
+medyas|die Socken
+sumbrero|der Hut
+guwantes|die Handschuhe
+bupanda|der Schal
+sukat|die Größe
+magsuot|anziehen / tragen (Kleidung)`,
+`Kailangan ko ng bagong sapatos.|Ich brauche neue Schuhe.
+Magdala ka ng dyaket, malamig.|Nimm eine Jacke mit, es ist kalt.
+Ano ang sukat mo?|Welche Größe hast du?
+Masyadong maliit ang polong ito.|Dieses Hemd ist zu klein.
+Puwede ko bang isukat ito?|Kann ich das anprobieren?`],
+["body","Körper & Gesundheit",`ulo|der Kopf
+mata|das Auge
+tainga / tenga|das Ohr
+ilong|die Nase
+bibig|der Mund
+kamay|die Hand
+braso|der Arm
+binti|das Bein
+paa|der Fuß
+likod|der Rücken
+tiyan|der Bauch / der Magen
+ngipin|der Zahn
+doktor|der Arzt / die Ärztin
+ospital|das Krankenhaus
+gamot|das Medikament
+may sakit|krank
+masakit|tut weh / schmerzhaft
+sakit ng ulo|die Kopfschmerzen
+sipon|der Schnupfen / die Erkältung
+malusog|gesund`,
+`Masakit ang ulo ko.|Ich habe Kopfschmerzen.
+Masakit ang likod ko.|Mein Rücken tut weh.
+Kailangan ko ng doktor.|Ich brauche einen Arzt.
+May sipon ako.|Ich bin erkältet.
+Magpagaling ka!|Gute Besserung!`],
+["travel","Unterwegs & Reisen",`kotse|das Auto
+bus|der Bus
+tren|der Zug
+eroplano|das Flugzeug
+bisikleta|das Fahrrad
+jeepney / dyip|der Jeepney (Sammeltaxi)
+istasyon|der Bahnhof / die Haltestelle
+paliparan|der Flughafen
+tiket|die Fahrkarte
+kalye / daan|die Straße
+kaliwa|links
+kanan|rechts
+diretso|geradeaus
+mapa|der Stadtplan / die Landkarte
+maleta|der Koffer
+pasaporte|der Reisepass
+magbiyahe|reisen
+magmaneho|Auto fahren
+trapik|der Stau / der Verkehr`,
+`Nasaan ang istasyon?|Wo ist der Bahnhof?
+Kumaliwa ka sa kanto.|Bieg an der Ecke links ab.
+Huli ang tren.|Der Zug hat Verspätung.
+Isang tiket papuntang Manila po.|Eine Fahrkarte nach Manila, bitte.
+Gaano kalayo ito?|Wie weit ist es?
+Para po!|Bitte anhalten! (im Jeepney)`],
+["weather","Wetter & Jahreszeiten",`panahon|das Wetter
+araw|die Sonne
+ulan|der Regen
+niyebe|der Schnee
+hangin|der Wind / die Luft
+ulap|die Wolke
+bagyo|der Taifun / der Sturm
+mainit|heiß / warm
+malamig|kalt
+maaraw|sonnig
+maulan|regnerisch
+maalinsangan|schwül
+tag-init / tag-araw|der Sommer (Trockenzeit)
+tag-ulan|die Regenzeit
+taglamig|der Winter
+Umuulan.|Es regnet.`,
+`Umuulan na naman.|Es regnet schon wieder.
+Sumisikat ang araw.|Die Sonne scheint.
+Napakalamig ngayon.|Heute ist es sehr kalt.
+Kumusta ang panahon?|Wie ist das Wetter?
+Mahal ko ang tag-init.|Ich liebe den Sommer.`],
+["free","Freizeit & Hobbys",`libreng oras|die Freizeit
+libangan|das Hobby
+musika|die Musik
+pelikula|der Film
+libro / aklat|das Buch
+laro|das Spiel
+basketbol|der Basketball
+handaan|die Feier / die Party
+sinehan|das Kino
+lumangoy|schwimmen
+magbasa|lesen
+magluto|kochen
+sumayaw|tanzen
+kumanta|singen
+maglaro|spielen
+mamasyal|spazieren gehen / bummeln
+manood ng TV|fernsehen
+makinig ng musika|Musik hören`,
+`Ano ang ginagawa mo sa libreng oras mo?|Was machst du in deiner Freizeit?
+Mahilig akong magbasa ng libro.|Ich lese gern Bücher.
+Manood tayo ng sine.|Lass uns ins Kino gehen.
+Naglalaro ako ng basketbol tuwing Linggo.|Ich spiele sonntags Basketball.
+Gusto mo bang sumayaw?|Möchtest du tanzen?`]
+];
+
+const GCAT_TL = {
+  ang:["ang / ng / sa","ang zeigt, um wen oder was es geht (Thema). ng steht vor dem Ding, das man isst, kauft usw. sa steht vor Ort oder Ziel (in, nach, auf)."],
+  pron:["Pronomen","ako = ich · ka / ikaw = du · siya = er oder sie · kami = wir (ohne dich) · tayo = wir (mit dir) · kayo = ihr oder Sie · sila = sie (Mehrzahl)."],
+  poss:["mein / dein / sein","Kommt nach dem Wort: bahay ko = mein Haus, bahay mo = dein Haus, bahay niya = sein oder ihr Haus."],
+  asp:["Verbformen","Vergangen – gerade – kommt noch: kumain (aß) · kumakain (isst gerade) · kakain (wird essen). Mit mag-: nag-aral · nag-aaral · mag-aaral. Die erste Silbe wird für jetzt und später verdoppelt."],
+  mga:["mga (Mehrzahl)","mga vor dem Wort macht die Mehrzahl: bata → mga bata (Kinder)."],
+  qw:["Fragewörter","Ano = was · Sino = wer · Saan = wo · Kailan = wann · Bakit = warum · Magkano = wie viel (Preis) · Ilan = wie viele."],
+  dem:["ito / iyan / iyon","ito = das hier (bei mir) · iyan = das da (bei dir) · iyon = das dort (weit weg)."],
+  link:["Verbinder na / -ng","Zwei Wörter werden verbunden: Endet das erste auf einen Vokal, hängt man -ng an (magandang umaga, malaking bahay). Sonst steht na dazwischen (mabait na bata)."],
+  po:["po / opo (höflich)","po macht einen Satz höflich, vor allem zu Älteren: Salamat po. opo = höfliches Ja."],
+  may:["may / mayroon / wala","may steht direkt vor dem Ding: May pera ako (Ich habe Geld). mayroon steht vor ka, ako, ba …: Mayroon ka bang anak? wala = nicht haben, es gibt nicht."],
+  neg:["hindi / huwag","hindi = nicht, nein. huwag = nicht, bei Aufforderungen: Huwag kang umalis! (Geh nicht weg!)"]
+};
+const GRAM_RAW_TL = `ang|Kumain ___ bata.|ang|ng,sa|Das Kind hat gegessen.
+ang|Pumunta ako ___ Manila.|sa|ang,ng|Ich bin nach Manila gefahren.
+ang|Bumili si Maria ___ isda.|ng|ang,sa|Maria hat Fisch gekauft.
+ang|Nasa mesa ___ susi.|ang|sa,ng|Der Schlüssel liegt auf dem Tisch.
+ang|Nakatira kami ___ Munich.|sa|ng,ang|Wir wohnen in München.
+pron|Taga-Alemanya ___.|ako|ko,akin|Ich komme aus Deutschland.
+pron|Kumusta ___?|ka|ko,niya|Wie geht es dir?
+pron|Kain ___!|tayo|kami,ako|Lass uns essen! (wir alle)
+pron|Taga-saan ___ po?|kayo|ka,ako|Woher kommen Sie?
+poss|Ito ang bahay ___.|ko|ako,akin|Das ist mein Haus.
+poss|Ano ang pangalan ___?|mo|ka,ikaw|Wie heißt du?
+poss|Doktor ang asawa ___.|niya|siya,sila|Sein Ehepartner ist Arzt.
+asp|Kahapon, ___ ako ng isda.|kumain|kumakain,kakain|Gestern habe ich Fisch gegessen.
+asp|Ngayon, ___ ako ng isda.|kumakain|kumain,kakain|Jetzt esse ich gerade Fisch.
+asp|Bukas, ___ ako ng isda.|kakain|kumain,kumakain|Morgen werde ich Fisch essen.
+asp|Araw-araw, ___ ako ng Tagalog.|nag-aaral|nag-aral,mag-aaral|Jeden Tag lerne ich Tagalog.
+asp|Kahapon, ___ ako nang walong oras.|nagtrabaho|nagtatrabaho,magtatrabaho|Gestern habe ich acht Stunden gearbeitet.
+asp|Mamaya, ___ kami sa sinehan.|pupunta|pumunta,pumupunta|Später gehen wir ins Kino.
+mga|Nasaan ang ___ bata?|mga|ng,na|Wo sind die Kinder?
+mga|Mababait ang ___ kapitbahay namin.|mga|ng,sa|Unsere Nachbarn sind nett.
+qw|___ ang pangalan mo?|Ano|Sino,Saan|Wie heißt du?
+qw|___ ka nakatira?|Saan|Ano,Sino|Wo wohnst du?
+qw|___ ang kaarawan mo?|Kailan|Saan,Sino|Wann ist dein Geburtstag?
+qw|___ po ito?|Magkano|Ilan,Kailan|Wie viel kostet das?
+qw|___ ang anak mo?|Ilan|Magkano,Ano|Wie viele Kinder hast du?
+qw|___ siya?|Sino|Ano,Saan|Wer ist das?
+qw|___ ka malungkot?|Bakit|Saan,Ilan|Warum bist du traurig?
+dem|Ano ___?|ito|iyan,iyon|Was ist das hier (bei mir)?
+dem|Akin ___.|iyan|ito,iyon|Das da (bei dir) gehört mir.
+dem|Ano ___ sa malayo?|iyon|ito,iyan|Was ist das dort in der Ferne?
+link|Maganda___ umaga!|ng|na,ang|Guten Morgen!
+link|Mabait ___ bata siya.|na|ng,ang|Er ist ein liebes Kind.
+link|Malaki___ bahay ito.|ng|na,sa|Das ist ein großes Haus.
+po|Salamat ___.|po|ka,ko|Danke (höflich).
+po|Kumain ka na ba? – ___, kumain na po ako.|Opo|Ako,Ito|Hast du schon gegessen? – Ja, ich habe schon gegessen.
+may|___ pera ako.|May|Ang,Sa|Ich habe Geld.
+may|___ akong kotse.|Wala|May,Hindi|Ich habe kein Auto.
+may|___ ka bang anak?|Mayroon|May,Ang|Hast du Kinder?
+neg|___ ako gutom.|Hindi|Huwag,Wala|Ich bin nicht hungrig.
+neg|___ kang umalis!|Huwag|Hindi,Wala|Geh nicht weg!
+neg|___ ko alam.|Hindi|Huwag,Wala|Ich weiß es nicht.`;
+
+const RAW = LANG === "tl" ? RAW_TL : RAW_EN;
+const GCAT = LANG === "tl" ? GCAT_TL : GCAT_EN;
+const GRAM_RAW = LANG === "tl" ? GRAM_RAW_TL : GRAM_RAW_EN;
+
 const lines = s => s.trim().split("\n").map(l => l.split("|").map(x => x.trim()));
 const TOPICS = RAW.map(([id, name, w, s]) => ({
   id, name,
@@ -747,7 +1234,7 @@ const SENTS = TOPICS.flatMap(t => t.sents);
 const GRAM = lines(GRAM_RAW).map(([cat, q, a, w, de], i) => ({ key: "g:" + i, cat, q, a, wrong: w.split(","), de }));
 
 /* ======================= STATE ======================= */
-const LS = "vokabelheft_en_v1";
+const LS = LANGS[LANG].store;
 const blank = () => ({ v: 1, t: 0, xp: 0, days: {}, srs: {}, gram: {}, ach: {}, c: {},
   set: { accent: "en-GB", voice: "auto", rate: 1, auto: true, sfx: true, goal: 50, cardDir: "de" } });
 function fix(o) {
@@ -836,14 +1323,15 @@ let TTS = null, DICT = null, VOICES = [];
 function loadVoices() { try { VOICES = speechSynthesis.getVoices() || []; } catch (e) { VOICES = []; } }
 if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.addEventListener && speechSynthesis.addEventListener("voiceschanged", loadVoices); }
 function pickVoice() {
-  const acc = S.set.accent.toLowerCase();
-  const en = VOICES.filter(v => /^en/i.test(v.lang));
+  const acc = speechLang().toLowerCase();
+  const en = VOICES.filter(v => LANG === "tl" ? /^(fil|tl)/i.test(v.lang) : /^en/i.test(v.lang));
   const same = en.filter(v => v.lang.replace("_", "-").toLowerCase() === acc);
   const nice = v => /google|natural|enhanced|premium|neural/i.test(v.name);
   return same.find(nice) || same[0] || en.find(nice) || en[0] || null;
 }
+const speechLang = () => (LANG === "tl" ? "fil-PH" : S.set.accent);
 const deviceOK = () => "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
-function useClaudeVoice() { return TTS && (S.set.voice === "claude" || (S.set.voice === "auto" && !(deviceOK() && VOICES.some(v => /^en/i.test(v.lang))))); }
+function useClaudeVoice() { return TTS && (S.set.voice === "claude" || (S.set.voice === "auto" && !(deviceOK() && VOICES.some(v => (LANG === "tl" ? /^(fil|tl)/i : /^en/i).test(v.lang))))); }
 function speakDevice(text, slow) {
   if (!deviceOK()) return false;
   try {
@@ -851,7 +1339,7 @@ function speakDevice(text, slow) {
     const u = new SpeechSynthesisUtterance(text), v = pickVoice();
     if (v) u.voice = v;
     u.onerror = e => { if (e && e.error !== "interrupted" && e.error !== "canceled") toast("Vorlesen hat nicht geklappt. Öffne die Seite am besten in Chrome."); };
-    u.lang = v ? v.lang : S.set.accent;
+    u.lang = v ? v.lang : speechLang();
     u.rate = (slow ? 0.62 : 0.92) * S.set.rate;
     speechSynthesis.speak(u);
     return true;
@@ -861,7 +1349,7 @@ function say(text, slow = false) {
   if (!text) return;
   text = text.split(" / ")[0].replace(/\(.*?\)/g, "").trim();
   if (useClaudeVoice()) {
-    TTS.speak(text, { language: S.set.accent, rate: (slow ? 0.75 : 1) * S.set.rate }).catch(e => {
+    TTS.speak(text, { language: LANG === "tl" ? "fil" : S.set.accent, rate: (slow ? 0.75 : 1) * S.set.rate }).catch(e => {
       if (e && e.code === "not_granted") TTS = null;
       if (e && e.code !== "stopped" && e.code !== "replaced") speakDevice(text, slow);
     });
@@ -907,10 +1395,10 @@ function toast(msg) {
 const CONTRACT = [[/\bi'm\b/g, "i am"], [/\byou're\b/g, "you are"], [/\bwe're\b/g, "we are"], [/\bthey're\b/g, "they are"], [/\b(he|she|it|what|that|there|where)'s\b/g, "$1 is"], [/\bcan't\b/g, "cannot"], [/\bcan not\b/g, "cannot"], [/\bwon't\b/g, "will not"], [/\b(do|does|did|is|are|was|were|have|has)n't\b/g, "$1 not"], [/\blet's\b/g, "let us"], [/\bi'll\b/g, "i will"], [/\bi'd\b/g, "i would"]];
 function norm(s) {
   s = String(s).toLowerCase().replace(/[’`´]/g, "'").replace(/\(.*?\)/g, " ");
-  for (const [r, v] of CONTRACT) s = s.replace(r, v);
+  if (LANG === "en") for (const [r, v] of CONTRACT) s = s.replace(r, v);
   return s.replace(/[.,!?;:"…]/g, " ").replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
-const stripArt = s => s.replace(/^(to|the|a|an) /, "");
+const stripArt = s => (LANG === "en" ? s.replace(/^(to|the|a|an) /, "") : s.replace(/^ang /, ""));
 const variants = en => en.split(" / ").map(x => stripArt(norm(x)));
 function lev(a, b) {
   const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]);
@@ -1014,7 +1502,7 @@ function practiceHtml() {
   const modes = [
     ["cards", "Karteikarten", "Umdrehen, selbst prüfen", "A ↔ B"],
     ["listen", "Hören", "Zuhören und verstehen", "))) "],
-    ["write", "Schreiben", "Deutsch → Englisch tippen", "abc"],
+    ["write", "Schreiben", "Deutsch → " + LN + " tippen", "abc"],
     ["build", "Satzbau", "Sätze aus Wörtern bauen", "_ _ _"],
     ["gram", "Grammatik", "Die richtige Form einsetzen", "is / are"],
     ["speak", "Sprechen", DICT ? "Nachsprechen, die App hört zu" : "In diesem Browser nicht verfügbar", "say it"],
@@ -1031,7 +1519,7 @@ function wordsHtml() {
   return `
   <section><h1 style="font-size:26px">Mein Vokabelheft</h1><p class="muted" style="margin:6px 0 0">${lt} von ${WORDS.length} Wörtern sitzen. Antippen zum Anhören. Die Punkte zeigen, wie sicher ein Wort ist.</p></section>
   <div class="tools">
-    <input id="wq" type="search" placeholder="Suchen (deutsch oder englisch)" value="${esc(WFILTER.q)}" autocomplete="off">
+    <input id="wq" type="search" placeholder="Suchen (Deutsch oder ${LN})" value="${esc(WFILTER.q)}" autocomplete="off">
     <select id="wt"><option value="all">Alle Themen</option><option value="learned">Nur gelernte</option><option value="new">Noch nicht geübt</option>${TOPICS.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
   </div>
   <div class="book" id="book"></div>`;
@@ -1047,7 +1535,7 @@ function bookHtml() {
     out += `<div class="topic-h">${esc(t.name)}</div>` + ws.map(w => { const b = Math.max(0, box(w.key)); return `
       <button class="row" data-say="${esc(w.en)}"><span class="en">${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots" aria-label="Sicherheit ${b} von 5">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("");
   }
-  return `<div class="bh"><span>Englisch</span><span>Deutsch</span></div>` + (out || `<p class="muted" style="padding:16px">Nichts gefunden.</p>`);
+  return `<div class="bh"><span>${LN}</span><span>Deutsch</span></div>` + (out || `<p class="muted" style="padding:16px">Nichts gefunden.</p>`);
 }
 function bindWords() {
   $("#wt").value = WFILTER.topic;
@@ -1093,10 +1581,11 @@ function settingsHtml() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-set="${key}" data-val="${v}" aria-pressed="${String(S.set[key]) === String(v)}">${l}</button>`).join("")}</div>`;
   const devVoice = pickVoice();
   return `<div class="sec-h"><h2>Einstellungen</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
-  <div class="setrow"><div class="label">Aussprache</div>${seg("accent", [["en-GB", "Britisch"], ["en-US", "Amerikanisch"]])}</div>
+  <div class="setrow"><div class="label">Sprache zum Lernen</div><div class="seg">${Object.entries(LANGS).map(([k, l]) => `<button data-lang="${k}" aria-pressed="${k === LANG}">${l.name}</button>`).join("")}</div><span class="hint">Jede Sprache hat ihren eigenen Fortschritt.</span></div>
+  ${LANG === "en" ? `<div class="setrow"><div class="label">Aussprache</div>${seg("accent", [["en-GB", "Britisch"], ["en-US", "Amerikanisch"]])}</div>` : ""}
   <div class="setrow"><div class="label">Stimme</div>${TTS ? seg("voice", [["auto", "Automatisch"], ["device", "Handy-Stimme"], ["claude", "Claude-Stimme"]]) : ""}
-    <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
-    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „Nice to meet you.“</button></div>
+    <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : LANG === "tl" ? "Keine Tagalog-Stimme gefunden. Am Handy: Einstellungen → System → Sprachen → Sprachausgabe → Zahnrad bei Google → Sprachdaten installieren → Filipino." : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
+    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button></div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Töne bei richtig / falsch</div>${seg("sfx", [["true", "An"], ["false", "Aus"]])}</div>
@@ -1245,15 +1734,15 @@ function renderTask() {
   if (t.kind === "mcEN" || t.kind === "mcDE" || t.kind === "listen") {
     const field = t.kind === "mcDE" ? "en" : "de";
     t.opts = t.opts || shuffle([it[field], ...distractors(it, field)]);
-    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf Englisch?" : "Hör zu – was bedeutet das?";
+    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf " + LN + "?" : "Hör zu – was bedeutet das?";
     const prompt = t.kind === "mcEN" ? `<div class="prompt"><div class="txt en">${esc(it.en)}</div>${spk(it.en)}</div>`
       : t.kind === "mcDE" ? `<div class="prompt"><div class="txt de">${esc(it.de)}</div></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div>`;
     body = `${newTag}<div class="t-label">${label}</div>${prompt}<div class="opts">${t.opts.map((o, i) => `<button class="opt" data-opt="${i}">${esc(o)}</button>`).join("")}</div>`;
     foot = `<button class="go ghost" data-act="dunno">Weiß ich nicht</button>`;
   } else if (t.kind === "type") {
-    body = `${newTag}<div class="t-label">Schreib es auf Englisch</div><div class="prompt"><div class="txt de">${esc(it.de)}</div></div>
-      <input class="answer-in" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="auf Englisch …">
+    body = `${newTag}<div class="t-label">Schreib es auf ${LN}</div><div class="prompt"><div class="txt de">${esc(it.de)}</div></div>
+      <input class="answer-in" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="auf ${LN} …">
       <button class="linkish" data-act="hint" style="justify-self:start;text-align:left">Tipp: Anfangsbuchstaben zeigen</button><div class="hint" id="hintTxt"></div>`;
     foot = `<button class="go" data-act="check">Prüfen</button>`;
   } else if (t.kind === "build" || t.kind === "buildL") {
@@ -1262,7 +1751,7 @@ function renderTask() {
     t.line = [];
     const prompt = t.kind === "build" ? `<div class="prompt"><div class="txt de" style="font-size:22px">${esc(it.de)}</div></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div><button class="linkish" data-act="showde" style="justify-self:center">Deutsche Übersetzung zeigen</button><div class="hint" id="deTxt" style="text-align:center"></div>`;
-    body = `${t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf Englisch" : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>`;
+    body = `${t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf " + LN : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>`;
     foot = `<button class="go" data-act="check" disabled id="chk">Prüfen</button>`;
   } else if (t.kind === "gram") {
     t.opts = t.opts || shuffle([it.a, ...it.wrong]);
@@ -1278,7 +1767,7 @@ function renderTask() {
   } else if (t.kind === "card") {
     t.flipped = false;
     const front = S.set.cardDir === "de" ? it.de : it.en;
-    body = `${newTag}<div class="sec-h"><div class="t-label">Karteikarte</div><button class="linkish" data-act="carddir">${S.set.cardDir === "de" ? "Deutsch → Englisch" : "Englisch → Deutsch"} ⇄</button></div>
+    body = `${newTag}<div class="sec-h"><div class="t-label">Karteikarte</div><button class="linkish" data-act="carddir">${S.set.cardDir === "de" ? "Deutsch → " + LN : LN + " → Deutsch"} ⇄</button></div>
       <div class="card flash" data-act="flip" id="flash"><div><div class="front">${esc(front)}</div><div class="tap">Antippen zum Umdrehen</div></div></div>`;
     foot = `<button class="go" data-act="flip">Umdrehen</button>`;
   }
@@ -1375,7 +1864,7 @@ function act(a, el) {
     case "dunno": if (!SES.answered) { markOpts(-1); grade(t, false); feedback(false); } return;
     case "hint": { const h = $("#hintTxt"); h.textContent = "Beginnt mit: " + t.item.en.split(" / ").map(x => stripArt(x.replace(/^(to|the|a|an) /i, "")).slice(0, 2) + "…").join(" oder "); return; }
     case "showde": $("#deTxt").textContent = t.item.de; return;
-    case "testvoice": return say("Nice to meet you.");
+    case "testvoice": return say(LANGS[LANG].probe);
     case "bak-save": return backupSave();
     case "bak-load": { const f = $("#bakFile"); f.value = ""; f.onchange = () => f.files[0] && backupLoad(f.files[0]); f.click(); return; }
     case "reset":
@@ -1395,7 +1884,7 @@ function act(a, el) {
       if (!DICT) return;
       if (micOn) { DICT.stop(); return; }
       HEARD = ""; PARTIAL = ""; $("#heard").textContent = "";
-      DICT.start({ language: "en" }).catch(e => { const h = $("#micHint"); if (h && e && e.code !== "stopped") h.textContent = e.code === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst die Aufgabe überspringen." : "Spracherkennung gerade nicht möglich."; });
+      DICT.start({ language: LANG === "tl" ? "fil" : "en" }).catch(e => { const h = $("#micHint"); if (h && e && e.code !== "stopped") h.textContent = e.code === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst die Aufgabe überspringen." : "Spracherkennung gerade nicht möglich."; });
       return;
     case "skip": if (micOn && DICT) DICT.stop(); SES.tasks.splice(SES.i, 1); SES.i--; return nextTask();
     case "check": return check(t);
@@ -1438,6 +1927,8 @@ document.addEventListener("click", e => {
   if (m && !m.disabled) { if (m.dataset.mode === "cards") return cardsSheet(); return startSession(m.dataset.mode); }
   const gc = e.target.closest("[data-gcat]");
   if (gc) return startSession("gram", gc.dataset.gcat);
+  const lg = e.target.closest("[data-lang]");
+  if (lg) return switchLang(lg.dataset.lang);
   const st = e.target.closest("[data-set]");
   if (st) return setSetting(st.dataset.set, st.dataset.val);
   const st2 = e.target.closest("[data-start]");
@@ -1463,6 +1954,10 @@ document.addEventListener("click", e => {
   }
 });
 $("#setBtn").addEventListener("click", () => { resetArmed = false; openSheet(settingsHtml()); });
+$("#langBtn").addEventListener("click", langSheet);
+$("#langMark").textContent = LANGS[LANG].code;
+$("#langName").textContent = LN + " ▾";
+document.title = "Vokabelheft " + LN;
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && !$("#sheet").hidden) closeSheet();
   if (e.key === "Enter" && SES && SES.answered && document.activeElement && document.activeElement.id !== "ans") { const n = $("#nextBtn"); if (n && document.activeElement !== n) { e.preventDefault(); nextTask(); } }
@@ -1471,8 +1966,8 @@ document.addEventListener("keydown", e => {
 /* ---- backup as a file (for a new phone) ---- */
 function backupSave() {
   S.lastBak = Date.now(); saveLocal();
-  const data = JSON.stringify({ app: "vokabelheft-englisch", v: 1, saved: new Date().toISOString(), state: S });
-  const name = "Vokabelheft-Sicherung-" + dayStr(TODAY()) + ".json";
+  const data = JSON.stringify({ app: "vokabelheft", lang: LANG, v: 1, saved: new Date().toISOString(), state: S });
+  const name = "Vokabelheft-" + LN + "-Sicherung-" + dayStr(TODAY()) + ".json";
   const blob = new Blob([data], { type: "application/json" });
   const u = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = u; a.download = name; document.body.appendChild(a); a.click();
@@ -1485,6 +1980,8 @@ function backupLoad(file) {
     try {
       const o = JSON.parse(r.result), st = o && (o.state || o);
       if (!st || typeof st.srs !== "object" || typeof st.xp !== "number") throw new Error("bad");
+      const bl = (o && o.lang) || "en";
+      if (bl !== LANG) { toast("Diese Sicherung ist für " + (LANGS[bl] ? LANGS[bl].name : bl) + ". Wechsle zuerst die Sprache."); return; }
       S = fix(st); saveLocal(); closeSheet(); render(); toast("Sicherung geladen.");
     } catch (e) { toast("Das ist keine Sicherung vom Vokabelheft."); }
   };
@@ -1503,7 +2000,7 @@ function webDict() {
       return new Promise((ok, no) => {
         try {
           let reason = "stopped";
-          rec = new SR(); rec.lang = S.set.accent; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+          rec = new SR(); rec.lang = speechLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
           h.s && h.s({ state: "starting" });
           rec.onstart = () => { h.s && h.s({ state: "listening" }); ok(); };
           rec.onresult = e => {
@@ -1521,6 +2018,13 @@ function webDict() {
   };
 }
 
+function langSheet() {
+  const xpOf = k => { try { const r = localStorage.getItem(LANGS[k].store); return r ? (JSON.parse(r).xp || 0) : 0; } catch (e) { return 0; } };
+  openSheet(`<div class="sec-h"><h2>Welche Sprache lernen?</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
+    <div class="topics">${Object.entries(LANGS).map(([k, l]) => `<button class="topic lang-pick" data-lang="${k}" ${k === LANG ? 'aria-current="true"' : ""}><span class="n"><span class="mark-sm">${l.code}</span> ${l.name}</span><span class="c">${k === LANG ? "gerade aktiv" : xpOf(k) + " XP"}</span></button>`).join("")}</div>
+    <span class="hint">Jede Sprache hat ihren eigenen Fortschritt, eigene Erfolge und eigene Sicherung.</span>`);
+}
+
 function topicSheet(id) {
   const t = TOPIC[id], st = topicStats(t);
   openSheet(`<div class="sec-h"><h2>${esc(t.name)}</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
@@ -1528,7 +2032,7 @@ function topicSheet(id) {
     <div class="bar green"><i style="width:${(st.l / st.n) * 100}%"></i></div>
     <button class="go" data-start="topic" data-arg="${id}">Lernen (ca. 10 Aufgaben)</button>
     <button class="go ghost" data-start="cards" data-arg="${id}">Karteikarten</button>
-    <div class="book" style="max-height:44vh;overflow-y:auto"><div class="bh"><span>Englisch</span><span>Deutsch</span></div>${t.words.map(w => { const b = Math.max(0, box(w.key)); return `<button class="row" data-say="${esc(w.en)}"><span class="en">${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("")}</div>`);
+    <div class="book" style="max-height:44vh;overflow-y:auto"><div class="bh"><span>${LN}</span><span>Deutsch</span></div>${t.words.map(w => { const b = Math.max(0, box(w.key)); return `<button class="row" data-say="${esc(w.en)}"><span class="en">${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("")}</div>`);
 }
 function cardsSheet() {
   openSheet(`<div class="sec-h"><h2>Karteikarten</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
