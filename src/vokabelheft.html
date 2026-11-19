@@ -250,6 +250,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
+const APP_VERSION = "1.1";
 const LANGS = {
   en: { name: "Englisch", code: "EN", store: "vokabelheft_en_v1", probe: "Nice to meet you." },
   tl: { name: "Tagalog", code: "TL", store: "vokabelheft_tl_v1", probe: "Magandang umaga po." }
@@ -1582,6 +1583,7 @@ function settingsHtml() {
   <div class="setrow"><div class="label">Töne bei richtig / falsch</div>${seg("sfx", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Tagesziel</div>${seg("goal", [["30", "30 XP"], ["50", "50 XP"], ["100", "100 XP"], ["150", "150 XP"]])}<span class="hint">Eine Runde bringt etwa 80–120 XP.</span></div>
   ${syncHtml()}
+  <span class="hint">Version ${APP_VERSION} · Englisch und Tagalog</span>
   ${REF ? "" : `<div class="setrow"><div class="label">Sicherung</div>
     <span class="hint">Damit du deinen Fortschritt auf ein neues Handy mitnehmen kannst. ${S.lastBak ? "Letzte Sicherung: " + new Date(S.lastBak).toLocaleDateString("de-DE") + "." : "Noch keine Sicherung gemacht."}</span>
     <div class="two"><button class="go ghost" data-act="bak-save">Sicherung speichern</button><button class="go ghost" data-act="bak-load">Sicherung laden</button></div>
