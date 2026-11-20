@@ -263,12 +263,12 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4.2";
+const APP_VERSION = "1.4.3";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
   en: { name: "Englisch", code: "EN", store: "vokabelheft_en_v1", probe: "Nice to meet you." },
-  tl: { name: "Tagalog", code: "TL", store: "vokabelheft_tl_v1", probe: "Magandang umaga po." }
+  tl: { name: "Tagalog", code: "TL", store: "vokabelheft_tl_v1", probe: "Ang pangalan ko ay Tom. Kumain ako ng isda." }
 };
 let LANG = "en";
 try { const l = localStorage.getItem("vokabelheft_lang"); if (LANGS[l]) LANG = l; } catch (e) {}
@@ -1412,10 +1412,13 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 /* ======================= SPEECH ======================= */
 let TTS = null, DICT = null, VOICES = [];
 function loadVoices() { try { VOICES = speechSynthesis.getVoices() || []; } catch (e) { VOICES = []; } }
-if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.addEventListener && speechSynthesis.addEventListener("voiceschanged", loadVoices); }
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.addEventListener && speechSynthesis.addEventListener("voiceschanged", () => { const had = VOICES.length; loadVoices(); if (!had && VOICES.length && TAB === "home" && typeof render === "function") render(); }); }
+const langVoices = () => VOICES.filter(v => LANG === "tl" ? /^(fil|tl)/i.test(v.lang) : /^en/i.test(v.lang));
 function pickVoice() {
   const acc = speechLang().toLowerCase();
-  const en = VOICES.filter(v => LANG === "tl" ? /^(fil|tl)/i.test(v.lang) : /^en/i.test(v.lang));
+  const en = langVoices();
+  const own = S.set.voiceName && en.find(v => v.name === S.set.voiceName);
+  if (own) return own;
   const same = en.filter(v => v.lang.replace("_", "-").toLowerCase() === acc);
   const nice = v => /google|natural|enhanced|premium|neural/i.test(v.name);
   return same.find(nice) || same[0] || en.find(nice) || en[0] || null;
@@ -1439,6 +1442,7 @@ function speakDevice(text, slow) {
 function say(text, slow = false) {
   if (!text) return;
   text = text.split(" / ")[0].replace(/\(.*?\)/g, "").trim();
+  if (LANG === "tl") text = text.replace(/\bng\b/g, "nang").replace(/\bNg\b/g, "Nang");
   if (useClaudeVoice()) {
     TTS.speak(text, { language: LANG === "tl" ? "fil" : S.set.accent, rate: (slow ? 0.75 : 1) * S.set.rate }).catch(e => {
       if (e && e.code === "not_granted") TTS = null;
@@ -1572,6 +1576,10 @@ function homeHtml() {
   const g = S.set.goal, x = xpToday(), L = levelInfo(S.xp), due = dueCount(), ct = currentTopic(), w = wordOfDay();
   const reached = x >= g;
   return `
+  ${LANG === "tl" && deviceOK() && VOICES.length && !pickVoice() ? `<section class="card" style="display:grid;gap:10px;border:2px solid var(--red)">
+    <b>Auf deinem Handy fehlt die Filipino-Stimme</b>
+    <span class="hint">Ohne sie liest eine fremde Stimme vor und Wörter wie „ang“ klingen falsch. Die Stimme ist kostenlos und in 2 Minuten installiert.</span>
+    <button class="go" data-act="voicehelp">So installierst du sie</button></section>` : ""}
   <section class="card hero">
     <div class="goal"><div><div class="label">Tagesziel</div><b>${x} / ${g} XP</b></div><span class="muted">${reached ? "Geschafft – stark!" : `noch ${g - x} XP`}</span></div>
     <div class="bar ${reached ? "green" : ""}"><i style="width:${Math.min(100, (x / g) * 100)}%"></i></div>
@@ -1690,6 +1698,7 @@ function settingsHtml() {
   ${LANG === "en" ? `<div class="setrow"><div class="label">Aussprache</div>${seg("accent", [["en-GB", "Britisch"], ["en-US", "Amerikanisch"]])}</div>` : ""}
   <div class="setrow"><div class="label">Stimme</div>${TTS ? seg("voice", [["auto", "Automatisch"], ["device", "Handy-Stimme"], ["claude", "Claude-Stimme"]]) : ""}
     <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : LANG === "tl" ? "Keine Tagalog-Stimme gefunden. Am Handy: Einstellungen → System → Sprachen → Sprachausgabe → Zahnrad bei Google → Sprachdaten installieren → Filipino." : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
+    ${langVoices().length > 1 ? `<select id="voiceSel" style="font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)">${langVoices().map(v => `<option value="${esc(v.name)}" ${devVoice && v.name === devVoice.name ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select>` : ""}
     <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button></div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
@@ -2005,6 +2014,7 @@ function act(a, el) {
     case "hint": { const h = $("#hintTxt"); h.textContent = "Beginnt mit: " + t.item.en.split(" / ").map(x => stripArt(x.replace(/^(to|the|a|an) /i, "")).slice(0, 2) + "…").join(" oder "); return; }
     case "showde": $("#deTxt").textContent = t.item.de; return;
     case "testvoice": return say(LANGS[LANG].probe);
+    case "voicehelp": return voiceHelp();
     case "share":
       if (navigator.share) { navigator.share({ title: "Vokabelheft", text: SHARE_TEXT.replace("\n" + APP_URL, ""), url: APP_URL }).catch(() => {}); return; }
       return copyLink();
@@ -2108,6 +2118,9 @@ document.addEventListener("click", e => {
     $("#chk").disabled = t.line.length !== t.toks.length;
   }
 });
+document.addEventListener("change", e => {
+  if (e.target.id === "voiceSel") { S.set.voiceName = e.target.value; saveLocal(); push(); say(LANGS[LANG].probe); }
+});
 $("#setBtn").addEventListener("click", () => { resetArmed = false; openSheet(settingsHtml()); });
 $("#langBtn").addEventListener("click", langSheet);
 $("#langMark").textContent = LANGS[LANG].code;
@@ -2176,6 +2189,20 @@ function webDict() {
     },
     stop() { return new Promise(ok => { if (!rec) return ok(); done = ok; try { rec.stop(); } catch (e) { done = null; ok(); } setTimeout(() => { if (done) { done(); done = null; } }, 2500); }); }
   };
+}
+
+function voiceHelp() {
+  openSheet(`<div class="sec-h"><h2>Filipino-Stimme installieren</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
+    <ol style="margin:0;padding-left:22px;display:grid;gap:8px;line-height:1.5">
+      <li>Handy-<b>Einstellungen</b> öffnen (Zahnrad).</li>
+      <li><b>System</b> → <b>Sprachen</b> (bei manchen Handys „Sprachen und Eingabe“).</li>
+      <li><b>Sprachausgabe</b> (auch „Text-in-Sprache“) antippen.</li>
+      <li>Neben <b>„Sprachausgabe von Google“</b> auf das <b>Zahnrad</b> tippen.</li>
+      <li><b>„Sprachdaten installieren“</b> → in der Liste <b>„Filipino (Philippinen)“</b> wählen → herunterladen.</li>
+      <li>Die App ganz schließen und neu öffnen.</li>
+    </ol>
+    <button class="go ghost" data-act="testvoice">Probe hören</button>
+    <span class="hint">Danach steht in den Einstellungen bei „Stimme“ eine Filipino-Stimme, und der rote Hinweis verschwindet.</span>`);
 }
 
 function langSheet() {
