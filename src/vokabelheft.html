@@ -259,7 +259,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.4.1";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1669,7 +1669,12 @@ function statsHtml() {
 }
 
 /* ======================= SETTINGS ======================= */
-function openSheet(html) { const sh = $("#sheet"); sh.innerHTML = `<div class="sheet-in" role="dialog" aria-modal="true"><div class="wrap">${html}</div></div>`; sh.hidden = false; }
+function openSheet(html) {
+  const sh = $("#sheet"), old = sh.hidden ? null : sh.querySelector(".sheet-in"), top = old ? old.scrollTop : 0;
+  sh.innerHTML = `<div class="sheet-in" role="dialog" aria-modal="true"><div class="wrap">${html}</div></div>`;
+  sh.hidden = false;
+  if (top) sh.querySelector(".sheet-in").scrollTop = top;
+}
 function closeSheet() { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; }
 $("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") closeSheet(); });
 let resetArmed = false;
@@ -1697,7 +1702,11 @@ function settingsHtml() {
     <span class="hint">Damit du deinen Fortschritt auf ein neues Handy mitnehmen kannst. ${S.lastBak ? "Letzte Sicherung: " + new Date(S.lastBak).toLocaleDateString("de-DE") + "." : "Noch keine Sicherung gemacht."}</span>
     <div class="two"><button class="go ghost" data-act="bak-save">Sicherung speichern</button><button class="go ghost" data-act="bak-load">Sicherung laden</button></div>
     <input type="file" id="bakFile" accept="application/json,.json" hidden></div>`}
-  <button class="go ${resetArmed ? "red" : "ghost"}" data-act="reset">${resetArmed ? "Wirklich alles löschen? Nochmal tippen" : "Fortschritt zurücksetzen"}</button>`;
+  ${resetArmed ? `<div class="card" id="resetBox" style="display:grid;gap:12px;border:2px solid var(--red)">
+      <b>Wirklich den ganzen Fortschritt für ${LN} löschen?</b>
+      <span class="hint">Punkte, gelernte Wörter, Tage in Folge und Stempel für ${LN} sind danach weg. Einstellungen bleiben.${LANG === "en" ? " Tagalog" : " Englisch"} ist davon nicht betroffen.</span>
+      <div class="two"><button class="go ghost" data-act="reset-no">Abbrechen</button><button class="go red" data-act="reset-yes">Ja, löschen</button></div>
+    </div>` : `<button class="go ghost" data-act="reset">Fortschritt zurücksetzen</button>`}`;
 }
 function setSetting(key, val) {
   if (key === "auto" || key === "sfx" || key === "pics") val = val === "true";
@@ -1990,8 +1999,10 @@ function act(a, el) {
     case "bak-save": return backupSave();
     case "bak-load": { const f = $("#bakFile"); f.value = ""; f.onchange = () => f.files[0] && backupLoad(f.files[0]); f.click(); return; }
     case "reset":
-      if (!resetArmed) { resetArmed = true; openSheet(settingsHtml()); setTimeout(() => { if (resetArmed) { resetArmed = false; if (!$("#sheet").hidden) openSheet(settingsHtml()); } }, 4000); return; }
-      resetArmed = false; { const keep = S.set; S = blank(); S.set = keep; } saveLocal(); push(); closeSheet(); render(); toast("Fortschritt gelöscht."); return;
+      resetArmed = true; openSheet(settingsHtml()); { const bx = $("#resetBox"); if (bx) bx.scrollIntoView({ block: "center", behavior: "smooth" }); } return;
+    case "reset-no": resetArmed = false; openSheet(settingsHtml()); return;
+    case "reset-yes":
+      resetArmed = false; { const keep = S.set; S = blank(); S.set = keep; } saveLocal(); push(); closeSheet(); render(); window.scrollTo(0, 0); toast("Fortschritt gelöscht – du fängst neu an."); return;
     case "carddir": S.set.cardDir = S.set.cardDir === "de" ? "en" : "de"; saveLocal(); t.flipped = false; renderTask(); return;
     case "flip": {
       if (t.flipped) return; t.flipped = true;
