@@ -97,6 +97,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .topics{display:grid;gap:10px}
 .topic{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;text-align:left;background:var(--sheet);border-radius:12px;padding:12px 14px;box-shadow:0 1px 0 var(--rule)}
 .topic .n{font-weight:700}
+.lvl-h{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--soft);font-weight:700;margin-top:8px}
 .topic .c{font-size:13px;color:var(--soft);font-variant-numeric:tabular-nums}
 .topic .bar{grid-column:1 / -1;height:6px}
 .topic.done .n::after{content:" ✓";color:var(--green)}
@@ -267,7 +268,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.3";
+const APP_VERSION = "1.4";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -282,6 +283,30 @@ function switchLang(l) { if (!LANGS[l] || l === LANG) return closeSheet(); try {
 /* ======================= CONTENT ======================= */
 /* ---------- Englisch ---------- */
 const RAW_EN = [
+["basic","Erste Wörter",`woman|die Frau
+man|der Mann
+child|das Kind
+boy|der Junge
+girl|das Mädchen
+people|die Leute
+I|ich
+you|du
+he|er
+she|sie (eine Frau)
+we|wir
+dog|der Hund
+cat|die Katze
+bird|der Vogel
+tree|der Baum
+flower|die Blume
+phone|das Handy / das Telefon
+name|der Name`,
+`I am a man.|Ich bin ein Mann.
+She is a woman.|Sie ist eine Frau.
+He is a boy.|Er ist ein Junge.
+The girl is happy.|Das Mädchen ist froh.
+I have a dog.|Ich habe einen Hund.
+The cat is small.|Die Katze ist klein.`],
 ["greet","Begrüßung & Smalltalk",`hello / hi|hallo
 good morning|guten Morgen
 good evening|guten Abend
@@ -388,7 +413,6 @@ brother|der Bruder
 sister|die Schwester
 son|der Sohn
 daughter|die Tochter
-child|das Kind
 children|die Kinder
 wife|die Ehefrau / die Frau
 husband|der Ehemann / der Mann
@@ -764,6 +788,29 @@ pron|I know ___. He is my neighbour.|him|he,his|Ich kenne ihn. Er ist mein Nachb
 
 /* ---------- Tagalog ---------- */
 const RAW_TL = [
+["basic","Erste Wörter",`babae|die Frau
+lalaki|der Mann
+bata|das Kind
+batang lalaki|der Junge
+batang babae|das Mädchen
+tao|der Mensch / die Person
+ako|ich
+ikaw / ka|du
+siya|er / sie
+kami / tayo|wir
+aso|der Hund
+pusa|die Katze
+ibon|der Vogel
+puno|der Baum
+bulaklak|die Blume
+cellphone / telepono|das Handy / das Telefon
+pangalan|der Name`,
+`Lalaki ako.|Ich bin ein Mann.
+Babae siya.|Sie ist eine Frau.
+Batang lalaki siya.|Er ist ein Junge.
+Masaya ang batang babae.|Das Mädchen ist froh.
+May aso ako.|Ich habe einen Hund.
+Maliit ang pusa.|Die Katze ist klein.`],
 ["greet","Begrüßung & Smalltalk",`kumusta|hallo / wie geht's
 magandang umaga|guten Morgen
 magandang hapon|guten Tag (am Nachmittag)
@@ -1240,6 +1287,7 @@ const PIC = {
 "hallo":"👋","guten Morgen":"🌅","guten Abend":"🌆","danke":"🙏","vielen Dank":"🙏","ja":"👍","ja (höflich)":"🙇","nein":"👎","Ich verstehe nicht.":"🤷","Entschuldigung":"🙇","pass auf dich auf":"🫶",
 "eins":"1️⃣","zwei":"2️⃣","drei":"3️⃣","vier":"4️⃣","fünf":"5️⃣","sechs":"6️⃣","sieben":"7️⃣","acht":"8️⃣","neun":"9️⃣","zehn":"🔟","hundert":"💯","erste":"🥇","zweite":"🥈","dritte":"🥉",
 "der Morgen":"🌅","der Abend":"🌙","der Nachmittag":"🌇","die Stunde":"⏰","die Minute":"⏱️","die Woche":"🗓️","Uhr":"🕐","der Tag":"📅","das Jahr":"🎆","das Wochenende":"🛋️","später":"⏳","früh":"🐓",
+"die Frau":"👩","der Mann":"👨","der Junge":"👦","das Mädchen":"👧","die Leute":"👥","der Mensch":"🧍","ich":"🙋","du":"👉","der Hund":"🐕","die Katze":"🐈","der Vogel":"🐦","der Baum":"🌲","die Blume":"🌼","das Handy":"📱","der Name":"📛",
 "die Mutter":"👩","der Vater":"👨","die Eltern":"👫","der Bruder":"👦","die Schwester":"👧","der Sohn":"👦","die Tochter":"👧","das Kind":"🧒","die Kinder":"👧👦","die Ehefrau":"👰","der Ehemann":"🤵","der Ehepartner":"💑","die Großmutter":"👵","der Großvater":"👴","die Oma":"👵","der Opa":"👴","der Freund":"🤝","der Nachbar":"🏘️","das Baby":"👶","die Familie":"👨‍👩‍👧",
 "der Reis":"🍚","das Brot":"🍞","die Butter":"🧈","der Käse":"🧀","das Ei":"🥚","das Fleisch":"🥩","der Fisch":"🐟","das Hähnchen":"🍗","das Huhn":"🍗","die Kartoffel":"🥔","das Gemüse":"🥦","das Obst":"🍇","der Apfel":"🍎","die Banane":"🍌","das Wasser":"💧","der Kaffee":"☕","der Tee":"🍵","die Milch":"🥛","das Bier":"🍺","der Saft":"🧃","das Frühstück":"🥐","das Mittagessen":"🍽️","das Abendessen":"🍝","die Rechnung":"🧾","lecker":"😋","hungrig":"🤤",
 "gehen":"🚶","sehen":"👀","machen":"🛠️","sagen":"💬","wissen":"🧠","denken":"🤔","essen":"🍴","trinken":"🥤","schlafen":"😴","lernen":"📚","verstehen":"💡","sprechen":"🗣️","arbeiten":"👷","suchen":"🔎","geben":"🎁","finden":"🎯","wollen":"🙋","brauchen":"🆘","mögen":"❤️","helfen":"🤲","nehmen":"✋","kommen":"🏃","ankommen":"🏁","zu Fuß gehen":"🚶",
@@ -1254,7 +1302,7 @@ const PIC = {
 "das Wetter":"🌦️","die Sonne":"☀️","der Regen":"🌧️","der Schnee":"❄️","der Wind":"💨","die Wolke":"☁️","der Sturm":"⛈️","der Taifun":"🌀","warm":"🌤️","heiß":"🔥","kalt":"🥶","sonnig":"😎","regnerisch":"☔","schwül":"💦","der Frühling":"🌷","der Sommer":"🌞","der Herbst":"🍂","der Winter":"⛄","die Regenzeit":"🌂","die Temperatur":"🌡️",
 "die Freizeit":"🎈","das Hobby":"🧩","die Musik":"🎵","der Film":"🎬","das Buch":"📖","das Spiel":"🎲","der Fußball":"⚽","der Basketball":"🏀","die Party":"🎉","die Feier":"🎉","das Kino":"🍿","schwimmen":"🏊","lesen":"👓","kochen":"🍳","tanzen":"💃","singen":"🎤","spielen":"🎮","spazieren gehen":"🚶","fernsehen":"📺","Musik hören":"🎧"
 };
-const TOPIC_PIC = { greet:"👋", numbers:"🔢", days:"📅", time:"⏰", family:"👨‍👩‍👧", food:"🍽️", verbs:"🏃", work:"🏭", home:"🏠", shop:"🛒", adj:"✨", colors:"🎨", clothes:"👕", body:"🩺", travel:"🚆", weather:"⛅", free:"⚽" };
+const TOPIC_PIC = { basic:"⭐", greet:"👋", numbers:"🔢", days:"📅", time:"⏰", family:"👨‍👩‍👧", food:"🍽️", verbs:"🏃", work:"🏭", home:"🏠", shop:"🛒", adj:"✨", colors:"🎨", clothes:"👕", body:"🩺", travel:"🚆", weather:"⛅", free:"⚽" };
 function findPic(de) {
   if (PIC[de]) return PIC[de];
   for (const part of de.split(" / ")) {
@@ -1267,8 +1315,12 @@ function findPic(de) {
 const picOn = () => S.set.pics !== false;
 const picHtml = (w, cls = "pic") => (picOn() && w.pic ? `<span class="${cls}" aria-hidden="true">${w.pic}</span>` : "");
 
-const TOPICS = RAW.map(([id, name, w, s]) => ({
-  id, name,
+/* Reihenfolge nach Schwierigkeit: Stufe 1 Einstieg, 2 Alltag, 3 Aufbau */
+const ORDER = ["basic", "family", "colors", "numbers", "food", "greet", "home", "clothes", "body", "days", "weather", "adj", "time", "verbs", "shop", "travel", "free", "work"];
+const LEVEL = { basic: 1, family: 1, colors: 1, numbers: 1, food: 1, greet: 2, home: 2, clothes: 2, body: 2, days: 2, weather: 2, adj: 2, time: 3, verbs: 3, shop: 3, travel: 3, free: 3, work: 3 };
+const LEVEL_NAME = { 1: "Stufe 1 · Einstieg", 2: "Stufe 2 · Alltag", 3: "Stufe 3 · Aufbau" };
+const TOPICS = RAW.slice().sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0])).map(([id, name, w, s]) => ({
+  id, name, level: LEVEL[id] || 3,
   words: lines(w).map(([en, de]) => ({ key: "w:" + id + ":" + en, en, de, topic: id, kind: "w", pic: findPic(de) })),
   sents: lines(s).map(([en, de]) => ({ key: "s:" + id + ":" + en, en, de, topic: id, kind: "s" }))
 }));
@@ -1535,14 +1587,14 @@ function homeHtml() {
   </section>
   <section class="card lvl">
     <div class="num">${L.lv}</div>
-    <div class="grow"><div class="label">Stufe ${L.lv} · ${S.xp} XP gesamt</div><div class="bar"><i style="width:${(L.into / L.need) * 100}%"></i></div><span class="muted" style="font-size:13.5px">${L.need - L.into} XP bis Stufe ${L.lv + 1}</span></div>
+    <div class="grow"><div class="label">Level ${L.lv} · ${S.xp} XP gesamt</div><div class="bar"><i style="width:${(L.into / L.need) * 100}%"></i></div><span class="muted" style="font-size:13.5px">${L.need - L.into} XP bis Level ${L.lv + 1}</span></div>
   </section>
   <section class="card wod">
     <div class="w"><div class="label">Wort des Tages</div><div class="en">${picHtml(w)} ${esc(w.en)}</div><div class="muted">${esc(w.de)}</div></div>
     ${spk(w.en)}
   </section>
   <section class="sec-h"><h2>Themen</h2><span class="muted" style="font-size:14px">Antippen zum Lernen</span></section>
-  <div class="topics">${TOPICS.map(t => { const st = topicStats(t); return `
+  <div class="topics">${TOPICS.map((t, i) => { const st = topicStats(t); return `${i === 0 || TOPICS[i - 1].level !== t.level ? `<div class="lvl-h">${LEVEL_NAME[t.level]}</div>` : ""}
     <button class="topic ${st.l === st.n ? "done" : ""}" data-topic="${t.id}">
       <span class="n">${picOn() ? `<span class="tpic" aria-hidden="true">${TOPIC_PIC[t.id] || ""}</span>` : ""}${esc(t.name)}</span><span class="c">${st.l} / ${st.n}</span>
       <span class="bar green"><i style="width:${(st.l / st.n) * 100}%"></i></span>
@@ -1669,21 +1721,24 @@ function wordTask(w, opts = {}) {
   const b = box(w.key);
   let kind;
   if (opts.force) kind = opts.force;
-  else if (b < 0) kind = "mcEN";
-  else if (b === 0) kind = pick(["mcEN", "mcDE"]);
-  else if (b === 1) kind = pick(picOn() && w.pic ? ["mcDE", "listen", "pic"] : ["mcDE", "listen"]);
-  else if (b === 2) kind = pick(picOn() && w.pic ? ["listen", "pic", "type"] : ["listen", "mcDE", "type"]);
+  else if (b <= 0) kind = "mcEN";
+  else if (b === 1) kind = pick(picOn() && w.pic ? ["mcDE", "pic"] : ["mcDE", "mcEN"]);
+  else if (b === 2) kind = pick(picOn() && w.pic ? ["listen", "pic", "mcDE"] : ["listen", "mcDE"]);
+  else if (b === 3) kind = pick(["type", "listen", "mcDE"]);
   else kind = pick(DICT && Math.random() < 0.2 ? ["speak"] : ["type", "listen", "type"]);
-  return { kind, item: w, isNew: b < 0 && opts.force !== "mcDE" };
+  return { kind, item: w, isNew: b < 0 && opts.force !== "mcDE" && !opts.follow };
 }
 function sentTask(s, force) { const b = box(s.key); return { kind: force || (b >= 2 ? "buildL" : "build"), item: s, isNew: b < 0 }; }
 function gramTask(g) { return { kind: "gram", item: g }; }
 const dueOf = list => { const t = TODAY(); return list.filter(x => S.srs[x.key] && S.srs[x.key][1] <= t).sort((a, b) => box(a.key) - box(b.key)); };
 const seenOf = list => list.filter(x => S.srs[x.key]);
 const unseenOf = list => list.filter(x => !S.srs[x.key]);
+const EASY_GRAM = LANG === "tl" ? ["pron", "poss", "qw", "po", "mga", "dem"] : ["be", "have", "art", "qw", "can", "there", "pron"];
+const learnedN = () => WORDS.filter(w => learned(w.key)).length;
 function weakGram(n) {
   const score = g => { const r = S.gram[g.cat]; return r ? r[0] / r[1] : 0.5; };
-  return shuffle(GRAM).sort((a, b) => score(a) - score(b) + (Math.random() - 0.5) * 0.6).slice(0, n);
+  const pool = learnedN() < 60 ? GRAM.filter(g => EASY_GRAM.includes(g.cat)) : GRAM;
+  return shuffle(pool).sort((a, b) => score(a) - score(b) + (Math.random() - 0.5) * 0.6).slice(0, n);
 }
 function poolWords(n) {
   // known words first (due, then seen), then new ones in topic order
@@ -1697,13 +1752,18 @@ function buildSession(type, arg) {
   let tasks = [], title = "";
   if (type === "daily") {
     title = "Tägliche Runde";
+    // Anfang leicht: wenige neue Wörter, Sätze ab 10 und Grammatik ab 25 sicheren Wörtern
+    const ln = learnedN(), maxNew = ln < 10 ? 4 : ln < 40 ? 5 : 7;
     const due = dueOf(WORDS).slice(0, 6);
     const ct = currentTopic();
-    const fresh = unseenOf(ct.words).slice(0, Math.max(3, 7 - due.length));
+    const fresh = unseenOf(ct.words).slice(0, Math.max(3, maxNew - Math.floor(due.length / 2)));
     if (fresh.length < 3) for (const w of unseenOf(WORDS)) if (fresh.length < 3 && !fresh.includes(w)) fresh.push(w);
     const extra = due.length + fresh.length < 8 ? shuffle(seenOf(WORDS).filter(w => !due.includes(w))).slice(0, 8 - due.length - fresh.length) : [];
-    const sents = [...dueOf(SENTS), ...shuffle(SENTS.filter(s => s.topic === ct.id || S.srs[s.key]))].filter((s, i, a) => a.indexOf(s) === i).slice(0, 2);
-    tasks = [...fresh.map(w => wordTask(w)), ...shuffle([...due, ...extra].map(w => wordTask(w)).concat(fresh.map(w => wordTask(w, { force: "mcDE" })), sents.map(s => sentTask(s)), weakGram(2).map(gramTask)))];
+    const knownTopic = s => TOPIC[s.topic].words.filter(w => S.srs[w.key]).length >= TOPIC[s.topic].words.length / 2;
+    const short = s => s.en.split(" ").length;
+    const sents = ln < 10 ? [] : [...dueOf(SENTS), ...SENTS.filter(s => !S.srs[s.key] && knownTopic(s)).sort((a, b) => short(a) - short(b))].filter((s, i, a) => a.indexOf(s) === i).slice(0, ln < 30 ? 1 : 2);
+    const grams = ln < 25 ? [] : weakGram(ln < 60 ? 1 : 2);
+    tasks = [...fresh.map(w => wordTask(w)), ...shuffle([...due, ...extra].map(w => wordTask(w)).concat(fresh.map(w => wordTask(w, { force: picOn() && w.pic ? "pic" : "mcDE", follow: true })), sents.map(s => sentTask(s)), grams.map(gramTask)))];
   } else if (type === "topic") {
     const t = TOPIC[arg]; title = t.name;
     const due = dueOf(t.words), fresh = unseenOf(t.words), rest = shuffle(seenOf(t.words).filter(w => !due.includes(w)));
@@ -1711,7 +1771,7 @@ function buildSession(type, arg) {
     for (const w of fresh) if (ws.length < 7) ws.push(w);
     for (const w of rest) if (ws.length < 8) ws.push(w);
     const newOnes = ws.filter(w => !S.srs[w.key]), old = ws.filter(w => S.srs[w.key]);
-    tasks = [...newOnes.map(w => wordTask(w)), ...shuffle(old.map(w => wordTask(w)).concat(newOnes.map(w => wordTask(w, { force: "mcDE" })), shuffle(t.sents).slice(0, 2).map(s => sentTask(s))))];
+    tasks = [...newOnes.map(w => wordTask(w)), ...shuffle(old.map(w => wordTask(w)).concat(newOnes.map(w => wordTask(w, { force: "mcDE" })), (t.words.filter(w => S.srs[w.key]).length >= t.words.length / 2 ? shuffle(t.sents).slice(0, 2) : []).map(s => sentTask(s))))];
   } else if (type === "listen") {
     title = "Hören";
     tasks = shuffle(poolWords(7).map(w => wordTask(w, { force: "listen" })).concat(shuffle(SENTS.filter(s => S.srs[s.key])).concat(shuffle(SENTS)).filter((s, i, a) => a.indexOf(s) === i).slice(0, 3).map(s => sentTask(s, "buildL"))));

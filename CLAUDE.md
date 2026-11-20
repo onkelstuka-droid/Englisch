@@ -32,6 +32,11 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bi
 - Übung `pic` („Was siehst du?“, Bild → Wort, `picDistractors` mit verschiedenen Bildern), eigene Kachel „Bilder“ (Sitzung `pics`) und in Box 1–2 gemischt. Ca. 260 von 320 Wörtern haben ein Bild (Wochentage/Monate keine).
 - Neue Wörter: passenden deutschen Eintrag in `PIC` ergänzen.
 
+## Leichter Einstieg (seit 1.4, Wunsch: „startet zu schwierig“)
+- Neues erstes Thema `basic` „Erste Wörter“ (Frau, Mann, Kind, Junge, Mädchen, ich, du, Hund, Katze …), in beiden Sprachen. Englisch „child“ ist dafür aus „Familie“ hierher gewandert.
+- Themen-Reihenfolge `ORDER` und Stufen `LEVEL`/`LEVEL_NAME` (1 Einstieg, 2 Alltag, 3 Aufbau), Startseite gruppiert danach. Die Punkte-Anzeige heißt „Level“ (nicht Stufe).
+- Tägliche Runde wächst mit `learnedN()`: < 10 sichere Wörter = 4 neue Wörter, keine Sätze, keine Grammatik; Sätze ab 10 (kürzeste zuerst, nur aus halb geübten Themen), Grammatik ab 25 (bis 60 nur leichte Kategorien `EASY_GRAM`). Aufgabenart nach Box: 0 = Erkennen, 1 = Übersetzen/Bild, 2 = Hören/Bild, ab 3 = Schreiben, ab 4 auch Sprechen.
+
 ## Übungen und Logik
 - Arten: mcEN (Englisch → Deutsch wählen), mcDE, listen (hören → Bedeutung), type (tippen, Tippfehler-Toleranz `lev`, Kurzformen `CONTRACT`), build/buildL (Satz aus Kärtchen, mit/ohne Ton), gram, speak (Spracherkennung), card (Karteikarte, selbst bewerten).
 - Sitzungen (`buildSession`): daily („Tägliche Runde“: fällige Wörter, neue aus dem aktuellen Thema + Wiederholung, 2 Sätze, 2 Grammatik), topic, listen, write, build, gram (auch je Kategorie), speak, mistakes, cards, redo.
