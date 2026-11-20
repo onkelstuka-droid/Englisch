@@ -263,7 +263,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4.3";
+const APP_VERSION = "1.4.4";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1439,10 +1439,17 @@ function speakDevice(text, slow) {
     return true;
   } catch (e) { return false; }
 }
+/* Tagalog fürs Vorlesen vorbereiten: alles klein (sonst halten Stimmen „Ang“ für eine Abkürzung und buchstabieren A-N-G),
+   „ng“ → „nang“ und „mga“ → „manga“, so wie man sie spricht. */
+function tlSpeak(text) {
+  return text.toLowerCase()
+    .replace(/(^|[^a-zñ'-])ng(?=$|[^a-zñ'-])/g, "$1nang")
+    .replace(/(^|[^a-zñ'-])mga(?=$|[^a-zñ'-])/g, "$1manga");
+}
 function say(text, slow = false) {
   if (!text) return;
   text = text.split(" / ")[0].replace(/\(.*?\)/g, "").trim();
-  if (LANG === "tl") text = text.replace(/\bng\b/g, "nang").replace(/\bNg\b/g, "Nang");
+  if (LANG === "tl") text = tlSpeak(text);
   if (useClaudeVoice()) {
     TTS.speak(text, { language: LANG === "tl" ? "fil" : S.set.accent, rate: (slow ? 0.75 : 1) * S.set.rate }).catch(e => {
       if (e && e.code === "not_granted") TTS = null;
