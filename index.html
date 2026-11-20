@@ -272,7 +272,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4.5";
+const APP_VERSION = "1.4.6";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1716,7 +1716,12 @@ function settingsHtml() {
   <div class="setrow"><div class="label">Stimme</div>${TTS ? seg("voice", [["auto", "Automatisch"], ["device", "Handy-Stimme"], ["claude", "Claude-Stimme"]]) : ""}
     <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : LANG === "tl" ? "Keine Tagalog-Stimme gefunden. Am Handy: Einstellungen → System → Sprachen → Sprachausgabe → Zahnrad bei Google → Sprachdaten installieren → Filipino." : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
     ${langVoices().length > 1 ? `<select id="voiceSel" style="font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)">${langVoices().map(v => `<option value="${esc(v.name)}" ${devVoice && v.name === devVoice.name ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select>` : ""}
-    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button></div>
+    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button>
+    ${LANG === "tl" ? `<div class="card" style="display:grid;gap:10px;margin-top:6px">
+      <b>Aussprache-Test für „ang“</b>
+      <span class="hint">Tippe die Knöpfe der Reihe nach an. Welche Nummer spricht „ang bata“ richtig, also „ang“ als ein Wort?</span>
+      <div class="seg">${PTEST.map((v, i) => `<button data-say="${esc(v)}" data-raw>${i + 1}</button>`).join("")}</div>
+    </div>` : ""}</div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Bildchen bei Wörtern</div>${seg("pics", [["true", "An"], ["false", "Aus"]])}</div>
@@ -2098,7 +2103,7 @@ async function check(t) {
 }
 document.addEventListener("click", e => {
   const sayB = e.target.closest("[data-say]");
-  if (sayB) { say(sayB.dataset.say, sayB.hasAttribute("data-slow")); if (!sayB.closest(".opt")) return; }
+  if (sayB) { if (sayB.hasAttribute("data-raw")) { speakDevice(sayB.dataset.say, false); return; } say(sayB.dataset.say, sayB.hasAttribute("data-slow")); if (!sayB.closest(".opt")) return; }
   const tab = e.target.closest("[data-tab]");
   if (tab) { TAB = tab.dataset.tab; render(); window.scrollTo(0, 0); return; }
   const a = e.target.closest("[data-act]");
@@ -2208,6 +2213,8 @@ function webDict() {
   };
 }
 
+// Schreibweisen von „ang bata“ zum Vergleichen (Nutzer meldet die Nummer, die richtig klingt)
+const PTEST = ["ang bata", "Ang bata.", "ahng bata", "an bata", "aang bata", "angbata", "ang, bata", "ʔaŋ bata"];
 function voiceHelp() {
   openSheet(`<div class="sec-h"><h2>Filipino-Stimme installieren</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
     <ol style="margin:0;padding-left:22px;display:grid;gap:8px;line-height:1.5">
