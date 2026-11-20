@@ -4,7 +4,7 @@ App-Link: https://onkelstuka-droid.github.io/Englisch/
 Repository: github.com/onkelstuka-droid/Englisch (Branch `main`, GitHub Pages aus `/ (root)`)
 Nutzer: **Hans-Jürgen Schlichting** (spricht Deutsch, Android-Handy Pixel, kein Programmierer). Auch Idee des Schichtplaners (github.com/onkelstuka-droid/Schichtplan-).
 Umsetzung: Claude. Immer auf Deutsch antworten, einfach erklären, Schritte für das Handy beschreiben.
-Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, **keine Bilder** in den Übungen, Übungen, gespeicherte Erfolge und Fortschritt, Sprachausgabe.
+Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bilder, seit Version 1.3 auf Wunsch **Bildchen (Emoji) bei Wörtern** (abschaltbar), Übungen, gespeicherte Erfolge und Fortschritt, Sprachausgabe.
 
 ## Aufbau
 - `src/vokabelheft.html` – **die gesamte App in einer Datei** (HTML, CSS, JS). Nur hier ändern.
@@ -25,6 +25,12 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, **keine Bilder**
 - `RAW`: 17 Themen (Begrüßung, Zahlen, Wochentage & Monate, Zeit, Familie, Essen, Verben, Arbeit & Schicht, Haus, Einkaufen, Eigenschaften, Farben, Kleidung, Körper & Gesundheit, Reisen, Wetter, Freizeit), je Zeile `englisch|deutsch`, Alternativen mit „ / “. Zweiter Block je Thema = Sätze.
 - Schlüssel: `w:<thema>:<englisch>` bzw. `s:…`. Englischen Text ändern = Wort gilt als neu.
 - `GRAM_RAW` (`kategorie|Satz mit ___|richtig|falsch1,falsch2|deutsch`) + `GCAT` (Name, Regel, die bei Fehlern gezeigt wird).
+
+## Bildchen (seit 1.3)
+- `PIC` = deutsche Bedeutung → Emoji (gilt für beide Sprachen), `findPic(de)` sucht ganzen Text, dann jede „ / “-Alternative mit und ohne Klammerzusatz. Wort-Objekt hat `pic`. `TOPIC_PIC` je Thema.
+- Anzeige über `picHtml()` in Aufgaben (mcEN, mcDE, Schreiben, Karteikarte), Wortliste, Wort des Tages, Themenliste. Schalter `S.set.pics` (Einstellungen „Bildchen bei Wörtern“).
+- Übung `pic` („Was siehst du?“, Bild → Wort, `picDistractors` mit verschiedenen Bildern), eigene Kachel „Bilder“ (Sitzung `pics`) und in Box 1–2 gemischt. Ca. 260 von 320 Wörtern haben ein Bild (Wochentage/Monate keine).
+- Neue Wörter: passenden deutschen Eintrag in `PIC` ergänzen.
 
 ## Übungen und Logik
 - Arten: mcEN (Englisch → Deutsch wählen), mcDE, listen (hören → Bedeutung), type (tippen, Tippfehler-Toleranz `lev`, Kurzformen `CONTRACT`), build/buildL (Satz aus Kärtchen, mit/ohne Ton), gram, speak (Spracherkennung), card (Karteikarte, selbst bewerten).

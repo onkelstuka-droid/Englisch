@@ -148,6 +148,14 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .t-label{font-family:var(--f-display);font-weight:800;font-size:21px}
 .newtag{display:inline-block;background:var(--marker);color:var(--on-marker);font-weight:700;font-size:13px;padding:3px 8px;border-radius:4px;transform:rotate(-1deg);width:max-content}
 .prompt{display:flex;align-items:center;gap:14px;background:var(--sheet);border-radius:var(--r);padding:20px 16px 20px 28px;box-shadow:0 6px 18px var(--shade);background-image:linear-gradient(90deg,transparent 14px,color-mix(in srgb,var(--red) 55%,transparent) 14px 16px,transparent 16px)}
+.pic,.pic-s,.pic-c,.bigpic,.tpic{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif;line-height:1;flex:none}
+.prompt .pic{font-size:42px}
+.pic-s{font-size:20px;margin-right:8px;vertical-align:-2px}
+.pic-c{font-size:64px;display:block;margin-bottom:8px}
+.tpic{font-size:20px;margin-right:10px;vertical-align:-2px}
+.wod .en .pic{font-size:26px}
+.bigpic-wrap{justify-content:center;padding:26px 16px}
+.bigpic{font-size:96px}
 .prompt .txt{flex:1;min-width:0;font-family:var(--f-display);font-weight:800;font-size:27px;overflow-wrap:anywhere}
 .prompt .txt.de{color:var(--ink)}
 .prompt .txt.en{color:var(--blue)}
@@ -250,7 +258,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.2";
+const APP_VERSION = "1.3";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1217,9 +1225,42 @@ const GCAT = LANG === "tl" ? GCAT_TL : GCAT_EN;
 const GRAM_RAW = LANG === "tl" ? GRAM_RAW_TL : GRAM_RAW_EN;
 
 const lines = s => s.trim().split("\n").map(l => l.split("|").map(x => x.trim()));
+
+/* ---------- Bildchen (Emoji) zu den deutschen Bedeutungen, gilt für alle Sprachen ---------- */
+const PIC = {
+"hallo":"👋","guten Morgen":"🌅","guten Abend":"🌆","danke":"🙏","vielen Dank":"🙏","ja":"👍","ja (höflich)":"🙇","nein":"👎","Ich verstehe nicht.":"🤷","Entschuldigung":"🙇","pass auf dich auf":"🫶",
+"eins":"1️⃣","zwei":"2️⃣","drei":"3️⃣","vier":"4️⃣","fünf":"5️⃣","sechs":"6️⃣","sieben":"7️⃣","acht":"8️⃣","neun":"9️⃣","zehn":"🔟","hundert":"💯","erste":"🥇","zweite":"🥈","dritte":"🥉",
+"der Morgen":"🌅","der Abend":"🌙","der Nachmittag":"🌇","die Stunde":"⏰","die Minute":"⏱️","die Woche":"🗓️","Uhr":"🕐","der Tag":"📅","das Jahr":"🎆","das Wochenende":"🛋️","später":"⏳","früh":"🐓",
+"die Mutter":"👩","der Vater":"👨","die Eltern":"👫","der Bruder":"👦","die Schwester":"👧","der Sohn":"👦","die Tochter":"👧","das Kind":"🧒","die Kinder":"👧👦","die Ehefrau":"👰","der Ehemann":"🤵","der Ehepartner":"💑","die Großmutter":"👵","der Großvater":"👴","die Oma":"👵","der Opa":"👴","der Freund":"🤝","der Nachbar":"🏘️","das Baby":"👶","die Familie":"👨‍👩‍👧",
+"der Reis":"🍚","das Brot":"🍞","die Butter":"🧈","der Käse":"🧀","das Ei":"🥚","das Fleisch":"🥩","der Fisch":"🐟","das Hähnchen":"🍗","das Huhn":"🍗","die Kartoffel":"🥔","das Gemüse":"🥦","das Obst":"🍇","der Apfel":"🍎","die Banane":"🍌","das Wasser":"💧","der Kaffee":"☕","der Tee":"🍵","die Milch":"🥛","das Bier":"🍺","der Saft":"🧃","das Frühstück":"🥐","das Mittagessen":"🍽️","das Abendessen":"🍝","die Rechnung":"🧾","lecker":"😋","hungrig":"🤤",
+"gehen":"🚶","sehen":"👀","machen":"🛠️","sagen":"💬","wissen":"🧠","denken":"🤔","essen":"🍴","trinken":"🥤","schlafen":"😴","lernen":"📚","verstehen":"💡","sprechen":"🗣️","arbeiten":"👷","suchen":"🔎","geben":"🎁","finden":"🎯","wollen":"🙋","brauchen":"🆘","mögen":"❤️","helfen":"🤲","nehmen":"✋","kommen":"🏃","ankommen":"🏁","zu Fuß gehen":"🚶",
+"die Arbeit":"💼","der Kollege":"🧑‍🤝‍🧑","der Chef":"👔","die Frühschicht":"🌄","die Spätschicht":"🌇","die Nachtschicht":"🌙","die Überstunden":"⏳","der Urlaub":"🏖️","der freie Tag":"🛋️","die Fabrik":"🏭","das Büro":"🏢","die Pause":"⏸️","der Lohn":"💶","die Besprechung":"👥","der Termin":"📅","die Krankmeldung":"🤒","anfangen":"▶️","aufhören":"⏹️","fertig werden":"⏹️",
+"das Haus":"🏠","die Wohnung":"🏬","die Küche":"🍳","das Badezimmer":"🛁","das Wohnzimmer":"🛋️","der Garten":"🌳","die Tür":"🚪","das Fenster":"🪟","der Stuhl":"🪑","das Bett":"🛏️","der Schlüssel":"🔑","die Treppe":"🪜","die Wand":"🧱","der Schrank":"🗄️","das Licht":"💡",
+"das Geschäft":"🏪","der Supermarkt":"🛒","der Markt":"🧺","die Bäckerei":"🥖","die Apotheke":"💊","das Geld":"💰","der Preis":"🏷️","teuer":"💎","billig":"🪙","kaufen":"🛒","bezahlen":"💸","das Bargeld":"💵","die Karte":"💳","der Kassenbon":"🧾","die Tüte":"🛍️","geöffnet":"🔓","geschlossen":"🔒","das Wechselgeld":"🪙","das Sonderangebot":"🏷️",
+"groß":"🐘","klein":"🐭","alt":"👴","alt (Person)":"👴","alt (Sache)":"🏚️","neu":"✨","jung":"👶","gut":"👌","schlecht":"😖","schön":"🌸","schnell":"🐇","langsam":"🐢","leicht":"🪶","schwierig":"🧗","glücklich":"😊","traurig":"😢","müde":"🥱","richtig":"✅","falsch":"❌","wichtig":"❗","lang":"📏","kurz":"✂️","nett":"🥰",
+"rot":"🔴","blau":"🔵","grün":"🟢","gelb":"🟡","schwarz":"⚫","weiß":"⚪","braun":"🟤","orange":"🟠","rosa":"🌸","lila":"🟣","dunkel":"🌑","die Farbe":"🎨",
+"die Kleidung":"👚","das Hemd":"👔","das T-Shirt":"👕","die Hose":"👖","das Kleid":"👗","die Jacke":"🧥","der Mantel":"🧥","die Schuhe":"👟","die Badelatschen":"🩴","die Socken":"🧦","der Hut":"🎩","die Mütze":"🧢","die Handschuhe":"🧤","der Schal":"🧣","der Pullover":"🧶","die Größe":"📐",
+"der Kopf":"👤","das Auge":"👁️","das Ohr":"👂","die Nase":"👃","der Mund":"👄","die Hand":"✋","der Arm":"💪","das Bein":"🦵","der Fuß":"🦶","der Zahn":"🦷","der Arzt":"🧑‍⚕️","das Krankenhaus":"🏥","das Medikament":"💊","krank":"🤒","der Schmerz":"🤕","tut weh":"🤕","die Kopfschmerzen":"🤕","die Erkältung":"🤧","der Schnupfen":"🤧","gesund":"🍏",
+"das Auto":"🚗","der Bus":"🚌","der Zug":"🚆","das Flugzeug":"✈️","das Fahrrad":"🚲","der Jeepney":"🚙","der Bahnhof":"🚉","der Flughafen":"🛫","die Fahrkarte":"🎫","die Straße":"🛣️","links":"⬅️","rechts":"➡️","geradeaus":"⬆️","der Stadtplan":"🗺️","das Hotel":"🏨","der Koffer":"🧳","der Reisepass":"🛂","reisen":"🌍","fahren":"🚘","Auto fahren":"🚘","der Stau":"🚦","die Tankstelle":"⛽",
+"das Wetter":"🌦️","die Sonne":"☀️","der Regen":"🌧️","der Schnee":"❄️","der Wind":"💨","die Wolke":"☁️","der Sturm":"⛈️","der Taifun":"🌀","warm":"🌤️","heiß":"🔥","kalt":"🥶","sonnig":"😎","regnerisch":"☔","schwül":"💦","der Frühling":"🌷","der Sommer":"🌞","der Herbst":"🍂","der Winter":"⛄","die Regenzeit":"🌂","die Temperatur":"🌡️",
+"die Freizeit":"🎈","das Hobby":"🧩","die Musik":"🎵","der Film":"🎬","das Buch":"📖","das Spiel":"🎲","der Fußball":"⚽","der Basketball":"🏀","die Party":"🎉","die Feier":"🎉","das Kino":"🍿","schwimmen":"🏊","lesen":"👓","kochen":"🍳","tanzen":"💃","singen":"🎤","spielen":"🎮","spazieren gehen":"🚶","fernsehen":"📺","Musik hören":"🎧"
+};
+const TOPIC_PIC = { greet:"👋", numbers:"🔢", days:"📅", time:"⏰", family:"👨‍👩‍👧", food:"🍽️", verbs:"🏃", work:"🏭", home:"🏠", shop:"🛒", adj:"✨", colors:"🎨", clothes:"👕", body:"🩺", travel:"🚆", weather:"⛅", free:"⚽" };
+function findPic(de) {
+  if (PIC[de]) return PIC[de];
+  for (const part of de.split(" / ")) {
+    const a = part.trim(), b = a.replace(/\s*\(.*?\)\s*/g, " ").trim();
+    if (PIC[a]) return PIC[a];
+    if (PIC[b]) return PIC[b];
+  }
+  return "";
+}
+const picOn = () => S.set.pics !== false;
+const picHtml = (w, cls = "pic") => (picOn() && w.pic ? `<span class="${cls}" aria-hidden="true">${w.pic}</span>` : "");
+
 const TOPICS = RAW.map(([id, name, w, s]) => ({
   id, name,
-  words: lines(w).map(([en, de]) => ({ key: "w:" + id + ":" + en, en, de, topic: id, kind: "w" })),
+  words: lines(w).map(([en, de]) => ({ key: "w:" + id + ":" + en, en, de, topic: id, kind: "w", pic: findPic(de) })),
   sents: lines(s).map(([en, de]) => ({ key: "s:" + id + ":" + en, en, de, topic: id, kind: "s" }))
 }));
 const TOPIC = Object.fromEntries(TOPICS.map(t => [t.id, t]));
@@ -1230,7 +1271,7 @@ const GRAM = lines(GRAM_RAW).map(([cat, q, a, w, de], i) => ({ key: "g:" + i, ca
 /* ======================= STATE ======================= */
 const LS = LANGS[LANG].store;
 const blank = () => ({ v: 1, t: 0, xp: 0, days: {}, srs: {}, gram: {}, ach: {}, c: {},
-  set: { accent: "en-GB", voice: "auto", rate: 1, auto: true, sfx: true, goal: 50, cardDir: "de" } });
+  set: { accent: "en-GB", voice: "auto", rate: 1, auto: true, sfx: true, pics: true, goal: 50, cardDir: "de" } });
 function fix(o) {
   const b = blank(), s = Object.assign(b, o || {});
   s.set = Object.assign(blank().set, (o && o.set) || {});
@@ -1408,6 +1449,14 @@ function checkTyped(input, en) {
   for (const v of vs) { const tol = v.length >= 8 ? 2 : v.length >= 4 ? 1 : 0; if (lev(u, v) <= tol) return "almost"; }
   return "no";
 }
+function picDistractors(item, n = 3) {
+  const out = [];
+  for (const w of shuffle(WORDS.filter(w => w.pic && w.pic !== item.pic && w.key !== item.key && !overlaps(w.en, item.en) && !overlaps(w.de, item.de)))) {
+    if (out.length >= n) break;
+    if (!out.some(o => overlaps(o.en, w.en) || o.pic === w.pic)) out.push(w);
+  }
+  return out.map(w => w.en);
+}
 function overlaps(a, b) { const A = a.split(" / ").map(norm), B = b.split(" / ").map(norm); return A.some(x => B.includes(x)); }
 function distractors(item, field, n = 3) {
   const pool = (item.kind === "s" ? SENTS : WORDS).filter(w => w.key !== item.key && !overlaps(w[field], item[field]) && !overlaps(w.en, item.en) && !overlaps(w.de, item.de));
@@ -1480,13 +1529,13 @@ function homeHtml() {
     <div class="grow"><div class="label">Stufe ${L.lv} · ${S.xp} XP gesamt</div><div class="bar"><i style="width:${(L.into / L.need) * 100}%"></i></div><span class="muted" style="font-size:13.5px">${L.need - L.into} XP bis Stufe ${L.lv + 1}</span></div>
   </section>
   <section class="card wod">
-    <div class="w"><div class="label">Wort des Tages</div><div class="en">${esc(w.en)}</div><div class="muted">${esc(w.de)}</div></div>
+    <div class="w"><div class="label">Wort des Tages</div><div class="en">${picHtml(w)} ${esc(w.en)}</div><div class="muted">${esc(w.de)}</div></div>
     ${spk(w.en)}
   </section>
   <section class="sec-h"><h2>Themen</h2><span class="muted" style="font-size:14px">Antippen zum Lernen</span></section>
   <div class="topics">${TOPICS.map(t => { const st = topicStats(t); return `
     <button class="topic ${st.l === st.n ? "done" : ""}" data-topic="${t.id}">
-      <span class="n">${esc(t.name)}</span><span class="c">${st.l} / ${st.n}</span>
+      <span class="n">${picOn() ? `<span class="tpic" aria-hidden="true">${TOPIC_PIC[t.id] || ""}</span>` : ""}${esc(t.name)}</span><span class="c">${st.l} / ${st.n}</span>
       <span class="bar green"><i style="width:${(st.l / st.n) * 100}%"></i></span>
     </button>`; }).join("")}</div>`;
 }
@@ -1495,6 +1544,7 @@ function practiceHtml() {
   const wrongN = Object.entries(S.srs).filter(([k, r]) => k[0] !== "g" && r[3] > 0 && r[0] < 3).length;
   const modes = [
     ["cards", "Karteikarten", "Umdrehen, selbst prüfen", "A ↔ B"],
+    ["pics", "Bilder", picOn() ? "Was siehst du? Bild → Wort" : "In den Einstellungen ausgeschaltet", "🍎 → ?"],
     ["listen", "Hören", "Zuhören und verstehen", "))) "],
     ["write", "Schreiben", "Deutsch → " + LN + " tippen", "abc"],
     ["build", "Satzbau", "Sätze aus Wörtern bauen", "_ _ _"],
@@ -1527,7 +1577,7 @@ function bookHtml() {
     if (!ws.length) continue;
     total += ws.length;
     out += `<div class="topic-h">${esc(t.name)}</div>` + ws.map(w => { const b = Math.max(0, box(w.key)); return `
-      <button class="row" data-say="${esc(w.en)}"><span class="en">${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots" aria-label="Sicherheit ${b} von 5">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("");
+      <button class="row" data-say="${esc(w.en)}"><span class="en">${picHtml(w, "pic-s")}${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots" aria-label="Sicherheit ${b} von 5">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("");
   }
   return `<div class="bh"><span>${LN}</span><span>Deutsch</span></div>` + (out || `<p class="muted" style="padding:16px">Nichts gefunden.</p>`);
 }
@@ -1582,6 +1632,7 @@ function settingsHtml() {
     <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button></div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
+  <div class="setrow"><div class="label">Bildchen bei Wörtern</div>${seg("pics", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Töne bei richtig / falsch</div>${seg("sfx", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Tagesziel</div>${seg("goal", [["30", "30 XP"], ["50", "50 XP"], ["100", "100 XP"], ["150", "150 XP"]])}<span class="hint">Eine Runde bringt etwa 80–120 XP.</span></div>
   <div class="setrow"><div class="label">App weiterempfehlen</div>
@@ -1597,7 +1648,7 @@ function settingsHtml() {
   <button class="go ${resetArmed ? "red" : "ghost"}" data-act="reset">${resetArmed ? "Wirklich alles löschen? Nochmal tippen" : "Fortschritt zurücksetzen"}</button>`;
 }
 function setSetting(key, val) {
-  if (key === "auto" || key === "sfx") val = val === "true";
+  if (key === "auto" || key === "sfx" || key === "pics") val = val === "true";
   else if (key === "goal") val = parseInt(val, 10);
   else if (key === "rate") val = parseFloat(val);
   S.set[key] = val; saveLocal(); push(); openSheet(settingsHtml()); render();
@@ -1611,8 +1662,8 @@ function wordTask(w, opts = {}) {
   if (opts.force) kind = opts.force;
   else if (b < 0) kind = "mcEN";
   else if (b === 0) kind = pick(["mcEN", "mcDE"]);
-  else if (b === 1) kind = pick(["mcDE", "listen"]);
-  else if (b === 2) kind = pick(["listen", "mcDE", "type"]);
+  else if (b === 1) kind = pick(picOn() && w.pic ? ["mcDE", "listen", "pic"] : ["mcDE", "listen"]);
+  else if (b === 2) kind = pick(picOn() && w.pic ? ["listen", "pic", "type"] : ["listen", "mcDE", "type"]);
   else kind = pick(DICT && Math.random() < 0.2 ? ["speak"] : ["type", "listen", "type"]);
   return { kind, item: w, isNew: b < 0 && opts.force !== "mcDE" };
 }
@@ -1655,6 +1706,13 @@ function buildSession(type, arg) {
   } else if (type === "listen") {
     title = "Hören";
     tasks = shuffle(poolWords(7).map(w => wordTask(w, { force: "listen" })).concat(shuffle(SENTS.filter(s => S.srs[s.key])).concat(shuffle(SENTS)).filter((s, i, a) => a.indexOf(s) === i).slice(0, 3).map(s => sentTask(s, "buildL"))));
+  } else if (type === "pics") {
+    title = "Bilder";
+    const withPic = WORDS.filter(w => w.pic);
+    const out = [...dueOf(withPic)];
+    for (const w of shuffle(seenOf(withPic))) if (out.length < 10 && !out.includes(w)) out.push(w);
+    for (const w of shuffle(withPic)) if (out.length < 10 && !out.includes(w)) out.push(w);
+    tasks = shuffle(out.slice(0, 10)).map(w => wordTask(w, { force: "pic" }));
   } else if (type === "write") {
     title = "Schreiben"; tasks = poolWords(10).map(w => wordTask(w, { force: "type" }));
   } else if (type === "build") {
@@ -1730,17 +1788,18 @@ function renderTask() {
   const it = t.item;
   let body = "", foot = "";
   const newTag = t.isNew && !t.requeued ? `<span class="newtag">Neues Wort – merk es dir</span>` : t.requeued ? `<span class="newtag">Zweiter Versuch</span>` : "";
-  if (t.kind === "mcEN" || t.kind === "mcDE" || t.kind === "listen") {
-    const field = t.kind === "mcDE" ? "en" : "de";
-    t.opts = t.opts || shuffle([it[field], ...distractors(it, field)]);
-    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf " + LN + "?" : "Hör zu – was bedeutet das?";
-    const prompt = t.kind === "mcEN" ? `<div class="prompt"><div class="txt en">${esc(it.en)}</div>${spk(it.en)}</div>`
-      : t.kind === "mcDE" ? `<div class="prompt"><div class="txt de">${esc(it.de)}</div></div>`
+  if (t.kind === "mcEN" || t.kind === "mcDE" || t.kind === "listen" || t.kind === "pic") {
+    const field = t.kind === "mcDE" || t.kind === "pic" ? "en" : "de";
+    t.opts = t.opts || shuffle([it[field], ...(t.kind === "pic" ? picDistractors(it) : distractors(it, field))]);
+    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf " + LN + "?" : t.kind === "pic" ? "Was siehst du? Auf " + LN + ":" : "Hör zu – was bedeutet das?";
+    const prompt = t.kind === "mcEN" ? `<div class="prompt">${picHtml(it)}<div class="txt en">${esc(it.en)}</div>${spk(it.en)}</div>`
+      : t.kind === "mcDE" ? `<div class="prompt">${picHtml(it)}<div class="txt de">${esc(it.de)}</div></div>`
+      : t.kind === "pic" ? `<div class="prompt bigpic-wrap"><span class="bigpic" role="img" aria-label="Bild">${it.pic}</span></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div>`;
     body = `${newTag}<div class="t-label">${label}</div>${prompt}<div class="opts">${t.opts.map((o, i) => `<button class="opt" data-opt="${i}">${esc(o)}</button>`).join("")}</div>`;
     foot = `<button class="go ghost" data-act="dunno">Weiß ich nicht</button>`;
   } else if (t.kind === "type") {
-    body = `${newTag}<div class="t-label">Schreib es auf ${LN}</div><div class="prompt"><div class="txt de">${esc(it.de)}</div></div>
+    body = `${newTag}<div class="t-label">Schreib es auf ${LN}</div><div class="prompt">${picHtml(it)}<div class="txt de">${esc(it.de)}</div></div>
       <input class="answer-in" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="auf ${LN} …">
       <button class="linkish" data-act="hint" style="justify-self:start;text-align:left">Tipp: Anfangsbuchstaben zeigen</button><div class="hint" id="hintTxt"></div>`;
     foot = `<button class="go" data-act="check">Prüfen</button>`;
@@ -1767,7 +1826,7 @@ function renderTask() {
     t.flipped = false;
     const front = S.set.cardDir === "de" ? it.de : it.en;
     body = `${newTag}<div class="sec-h"><div class="t-label">Karteikarte</div><button class="linkish" data-act="carddir">${S.set.cardDir === "de" ? "Deutsch → " + LN : LN + " → Deutsch"} ⇄</button></div>
-      <div class="card flash" data-act="flip" id="flash"><div><div class="front">${esc(front)}</div><div class="tap">Antippen zum Umdrehen</div></div></div>`;
+      <div class="card flash" data-act="flip" id="flash"><div>${picHtml(it, "pic-c")}<div class="front">${esc(front)}</div><div class="tap">Antippen zum Umdrehen</div></div></div>`;
     foot = `<button class="go" data-act="flip">Umdrehen</button>`;
   }
   const s = $("#session");
@@ -1796,7 +1855,7 @@ function feedback(ok, opts = {}) {
   const foot = $("#session .s-foot");
   foot.className = "s-foot " + (ok ? "ok" : "bad");
   $("#foot").innerHTML = `<div class="verdict">${verdict}</div>${lines}${xpNote}<button class="go ${ok ? "green" : ""}" data-act="next" id="nextBtn">Weiter</button>`;
-  if ((t.kind === "mcDE" || t.kind === "type" || t.kind === "build" || t.kind === "gram") && S.set.auto) say(en);
+  if ((t.kind === "mcDE" || t.kind === "pic" || t.kind === "type" || t.kind === "build" || t.kind === "gram") && S.set.auto) say(en);
   $("#nextBtn").focus({ preventScroll: true });
 }
 
@@ -1895,7 +1954,7 @@ function act(a, el) {
 }
 function startSessionWith(tasks) { SES = buildSession("redo", tasks); $("#session").hidden = false; renderTask(); }
 function markOpts(chosen) {
-  const t = SES.tasks[SES.i], right = t.kind === "gram" ? t.item.a : t.kind === "mcDE" ? t.item.en : t.item.de;
+  const t = SES.tasks[SES.i], right = t.kind === "gram" ? t.item.a : t.kind === "mcDE" || t.kind === "pic" ? t.item.en : t.item.de;
   document.querySelectorAll("#session .opt").forEach((b, i) => { b.disabled = true; if (t.opts[i] === right) b.classList.add("right"); else if (i === chosen) b.classList.add("wrong"); });
   if (t.kind === "gram") { const g = $("#gap"); g.textContent = t.item.a; g.classList.add("fill"); }
 }
@@ -1927,7 +1986,7 @@ document.addEventListener("click", e => {
   const tp = e.target.closest("[data-topic]");
   if (tp) return topicSheet(tp.dataset.topic);
   const m = e.target.closest("[data-mode]");
-  if (m && !m.disabled) { if (m.dataset.mode === "cards") return cardsSheet(); return startSession(m.dataset.mode); }
+  if (m && !m.disabled) { if (m.dataset.mode === "pics" && !picOn()) return; if (m.dataset.mode === "cards") return cardsSheet(); return startSession(m.dataset.mode); }
   const gc = e.target.closest("[data-gcat]");
   if (gc) return startSession("gram", gc.dataset.gcat);
   const lg = e.target.closest("[data-lang]");
@@ -1940,7 +1999,7 @@ document.addEventListener("click", e => {
   const t = SES.tasks[SES.i];
   const op = e.target.closest("[data-opt]");
   if (op) {
-    const i = +op.dataset.opt, right = t.kind === "gram" ? t.item.a : t.kind === "mcDE" ? t.item.en : t.item.de;
+    const i = +op.dataset.opt, right = t.kind === "gram" ? t.item.a : t.kind === "mcDE" || t.kind === "pic" ? t.item.en : t.item.de;
     const ok = t.opts[i] === right;
     markOpts(i);
     grade(t, ok, t.kind === "listen" ? "listenOk" : t.kind === "gram" ? "gramOk" : null);
@@ -2040,7 +2099,7 @@ function topicSheet(id) {
     <div class="bar green"><i style="width:${(st.l / st.n) * 100}%"></i></div>
     <button class="go" data-start="topic" data-arg="${id}">Lernen (ca. 10 Aufgaben)</button>
     <button class="go ghost" data-start="cards" data-arg="${id}">Karteikarten</button>
-    <div class="book" style="max-height:44vh;overflow-y:auto"><div class="bh"><span>${LN}</span><span>Deutsch</span></div>${t.words.map(w => { const b = Math.max(0, box(w.key)); return `<button class="row" data-say="${esc(w.en)}"><span class="en">${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("")}</div>`);
+    <div class="book" style="max-height:44vh;overflow-y:auto"><div class="bh"><span>${LN}</span><span>Deutsch</span></div>${t.words.map(w => { const b = Math.max(0, box(w.key)); return `<button class="row" data-say="${esc(w.en)}"><span class="en">${picHtml(w, "pic-s")}${esc(w.en)}</span><span class="de"><span>${esc(w.de)}</span><span class="dots">${[1, 2, 3, 4, 5].map(i => `<i class="${b >= i ? "on" : ""}"></i>`).join("")}</span></span></button>`; }).join("")}</div>`);
 }
 function cardsSheet() {
   openSheet(`<div class="sec-h"><h2>Karteikarten</h2><button class="icon-btn" data-act="close" aria-label="Schließen">${ICON.x}</button></div>
