@@ -166,6 +166,8 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .wod .en .pic{font-size:26px}
 .bigpic-wrap{justify-content:center;padding:26px 16px}
 .bigpic{font-size:96px}
+.bigpic-box{display:grid;justify-items:center;gap:10px;text-align:center}
+.pic-cap{font-family:var(--f-display);font-weight:800;font-size:24px;color:var(--ink)}
 .prompt .txt{flex:1;min-width:0;font-family:var(--f-display);font-weight:800;font-size:27px;overflow-wrap:anywhere}
 .prompt .txt.de{color:var(--ink)}
 .prompt .txt.en{color:var(--blue)}
@@ -178,8 +180,10 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .opts{display:grid;gap:10px}
 .opt{text-align:left;background:var(--sheet);border:2px solid var(--rule);border-radius:12px;padding:14px 16px;font-size:18px;font-weight:700;min-height:56px;overflow-wrap:anywhere}
 .opt:active{background:var(--tint)}
+.opt-m{display:block;font-weight:400;font-size:14.5px;color:var(--soft);margin-top:3px;text-decoration:none}
+.opt.wrong .opt-m{text-decoration:none;display:block}
 .opt.right{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--sheet))}
-.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--sheet));text-decoration:line-through;text-decoration-color:var(--red)}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--sheet))}
 .opt[disabled]{cursor:default}
 .gap{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--blue);text-align:center;color:var(--blue)}
 .gap.fill{background:var(--marker);color:var(--on-marker);border-bottom-color:transparent;padding:0 4px;border-radius:3px}
@@ -268,7 +272,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.4.2";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1605,7 +1609,7 @@ function practiceHtml() {
   const wrongN = Object.entries(S.srs).filter(([k, r]) => k[0] !== "g" && r[3] > 0 && r[0] < 3).length;
   const modes = [
     ["cards", "Karteikarten", "Umdrehen, selbst prüfen", "A ↔ B"],
-    ["pics", "Bilder", picOn() ? "Was siehst du? Bild → Wort" : "In den Einstellungen ausgeschaltet", "🍎 → ?"],
+    ["pics", "Bilder", picOn() ? "Bild mit deutschem Wort → " + LN : "In den Einstellungen ausgeschaltet", "🍎 → ?"],
     ["listen", "Hören", "Zuhören und verstehen", "))) "],
     ["write", "Schreiben", "Deutsch → " + LN + " tippen", "abc"],
     ["build", "Satzbau", "Sätze aus Wörtern bauen", "_ _ _"],
@@ -1869,10 +1873,10 @@ function renderTask() {
   if (t.kind === "mcEN" || t.kind === "mcDE" || t.kind === "listen" || t.kind === "pic") {
     const field = t.kind === "mcDE" || t.kind === "pic" ? "en" : "de";
     t.opts = t.opts || shuffle([it[field], ...(t.kind === "pic" ? picDistractors(it) : distractors(it, field))]);
-    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf " + LN + "?" : t.kind === "pic" ? "Was siehst du? Auf " + LN + ":" : "Hör zu – was bedeutet das?";
+    const label = t.kind === "mcEN" ? "Was bedeutet das?" : t.kind === "mcDE" ? "Wie heißt das auf " + LN + "?" : t.kind === "pic" ? "Wie heißt das auf " + LN + "?" : "Hör zu – was bedeutet das?";
     const prompt = t.kind === "mcEN" ? `<div class="prompt">${picHtml(it)}<div class="txt en">${esc(it.en)}</div>${spk(it.en)}</div>`
       : t.kind === "mcDE" ? `<div class="prompt">${picHtml(it)}<div class="txt de">${esc(it.de)}</div></div>`
-      : t.kind === "pic" ? `<div class="prompt bigpic-wrap"><span class="bigpic" role="img" aria-label="Bild">${it.pic}</span></div>`
+      : t.kind === "pic" ? `<div class="prompt bigpic-wrap"><div class="bigpic-box"><span class="bigpic" aria-hidden="true">${it.pic}</span><div class="pic-cap">${esc(it.de)}</div></div></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div>`;
     body = `${newTag}<div class="t-label">${label}</div>${prompt}<div class="opts">${t.opts.map((o, i) => `<button class="opt" data-opt="${i}">${esc(o)}</button>`).join("")}</div>`;
     foot = `<button class="go ghost" data-act="dunno">Weiß ich nicht</button>`;
@@ -1924,9 +1928,18 @@ function feedback(ok, opts = {}) {
   const ans = t.kind === "gram" ? it.a : t.kind === "mcEN" || t.kind === "listen" ? it.de : it.en;
   const verdict = ok ? (opts.almost ? "Fast richtig!" : pick(["Richtig!", "Sehr gut!", "Prima!", "Genau!", "Stark!"])) : "Leider falsch";
   let lines = "";
-  if (opts.almost) lines += `<div class="fb-line"><div class="t">Achte auf die Schreibweise: <b>${esc(it.en)}</b></div>${spk(it.en, "sm")}</div>`;
-  else if (!ok || t.kind === "listen" || t.kind === "buildL" || t.kind === "speak") lines += `<div class="fb-line"><div class="t">${ok ? "" : "Richtig ist: "}<b>${esc(t.kind === "gram" ? en : ans)}</b>${t.kind === "listen" || t.kind === "buildL" ? `<br><span class="muted">${esc(t.kind === "listen" ? it.en : it.de)}</span>` : t.kind === "mcEN" ? `<br><span class="muted">${esc(it.en)}</span>` : ""}</div>${spk(en, "sm")}</div>`;
-  else lines += `<div class="fb-line"><div class="t"><b>${esc(en)}</b>${t.kind === "gram" ? "" : ` = ${esc(it.de)}`}</div>${spk(en, "sm")}</div>`;
+  if (t.kind === "gram") {
+    lines += `<div class="fb-line"><div class="t">${ok ? "" : "Richtig ist: "}<b>${esc(en)}</b><br><span class="muted">${esc(it.de)}</span></div>${spk(en, "sm")}</div>`;
+  } else {
+    // immer beides: Wort (mit Bild) und deutsche Bedeutung
+    const mean = `${picHtml(it, "pic-s")}<b>${esc(it.en)}</b> = ${esc(it.de)}`;
+    const pre = opts.almost ? "Achte auf die Schreibweise:<br>" : ok ? "" : "Richtig ist:<br>";
+    lines += `<div class="fb-line"><div class="t">${pre}${mean}</div>${spk(it.en, "sm")}</div>`;
+    if (!ok && opts.chosen) {
+      const w = itemByText(it, opts.chosen);
+      if (w && w.key !== it.key) lines += `<div class="hint">Deine Wahl: ${picHtml(w, "pic-s")}<b>${esc(w.en)}</b> = ${esc(w.de)}</div>`;
+    }
+  }
   if (t.kind === "gram" && !ok) lines += `<div class="tip">${esc(GCAT[it.cat][1])}</div>`;
   if (opts.heard !== undefined && !ok) lines += `<div class="hint">Verstanden habe ich: „${esc(opts.heard || "–")}“</div>`;
   const xpNote = ok && !t.requeued ? `<span class="chip" style="justify-self:start">+${t.kind === "type" || t.kind === "speak" || t.kind === "buildL" ? 15 : 10} XP</span>` : "";
@@ -2033,9 +2046,18 @@ function act(a, el) {
   }
 }
 function startSessionWith(tasks) { SES = buildSession("redo", tasks); $("#session").hidden = false; renderTask(); }
+function itemByText(it, text) {
+  const list = it.kind === "s" ? SENTS : WORDS;
+  return list.find(w => w.en === text && w.topic === it.topic) || list.find(w => w.de === text && w.topic === it.topic) || list.find(w => w.en === text) || list.find(w => w.de === text) || null;
+}
 function markOpts(chosen) {
   const t = SES.tasks[SES.i], right = t.kind === "gram" ? t.item.a : t.kind === "mcDE" || t.kind === "pic" ? t.item.en : t.item.de;
-  document.querySelectorAll("#session .opt").forEach((b, i) => { b.disabled = true; if (t.opts[i] === right) b.classList.add("right"); else if (i === chosen) b.classList.add("wrong"); });
+  const showsDe = t.kind === "mcEN" || t.kind === "listen";
+  document.querySelectorAll("#session .opt").forEach((b, i) => {
+    b.disabled = true;
+    if (t.opts[i] === right) b.classList.add("right"); else if (i === chosen) b.classList.add("wrong");
+    if (t.kind !== "gram") { const w = t.opts[i] === right ? t.item : itemByText(t.item, t.opts[i]); if (w) b.insertAdjacentHTML("beforeend", `<small class="opt-m">${picHtml(w, "pic-s")}${esc(showsDe ? w.en : w.de)}</small>`); }
+  });
   if (t.kind === "gram") { const g = $("#gap"); g.textContent = t.item.a; g.classList.add("fill"); }
 }
 async function check(t) {
@@ -2083,7 +2105,7 @@ document.addEventListener("click", e => {
     const ok = t.opts[i] === right;
     markOpts(i);
     grade(t, ok, t.kind === "listen" ? "listenOk" : t.kind === "gram" ? "gramOk" : null);
-    feedback(ok);
+    feedback(ok, { chosen: t.opts[i] });
     return;
   }
   const tok = e.target.closest("[data-tok]");

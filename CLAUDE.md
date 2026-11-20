@@ -30,6 +30,8 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bi
 - `PIC` = deutsche Bedeutung → Emoji (gilt für beide Sprachen), `findPic(de)` sucht ganzen Text, dann jede „ / “-Alternative mit und ohne Klammerzusatz. Wort-Objekt hat `pic`. `TOPIC_PIC` je Thema.
 - Anzeige über `picHtml()` in Aufgaben (mcEN, mcDE, Schreiben, Karteikarte), Wortliste, Wort des Tages, Themenliste. Schalter `S.set.pics` (Einstellungen „Bildchen bei Wörtern“).
 - Übung `pic` („Was siehst du?“, Bild → Wort, `picDistractors` mit verschiedenen Bildern), eigene Kachel „Bilder“ (Sitzung `pics`) und in Box 1–2 gemischt. Ca. 260 von 320 Wörtern haben ein Bild (Wochentage/Monate keine).
+- Bild-Übung zeigt unter dem Bild das deutsche Wort (`pic-cap`), weil manche Emoji (z. B. 👦/👧) am Handy kaum zu unterscheiden sind (Wunsch des Nutzers, 1.4.2).
+- Nach jeder Antwort: Rückmeldung immer „Bild Wort = deutsche Bedeutung“, bei Fehler zusätzlich „Deine Wahl: …“ (`itemByText`); alle Antwort-Knöpfe zeigen danach klein ihre Bedeutung (`markOpts`).
 - Neue Wörter: passenden deutschen Eintrag in `PIC` ergänzen.
 
 ## Leichter Einstieg (seit 1.4, Wunsch: „startet zu schwierig“)
