@@ -273,7 +273,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.5.1";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -2056,7 +2056,7 @@ function trMicState(state, reason) {
   const b = $("#trMic"), h = $("#trHint");
   if (b) b.classList.toggle("on", micOn);
   if (!h) return;
-  if (state === "listening") h.textContent = "Ich höre zu … nochmal tippen, wenn du fertig bist.";
+  if (state === "listening") h.textContent = "Ich höre zu … sprich jetzt. Nach einer kurzen Pause wird übersetzt.";
   if (state === "idle") {
     if (reason && reason !== "stopped" && reason !== "viewer_stopped") h.textContent = reason === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst den Satz eintippen." : "Das hat nicht geklappt. Nochmal tippen oder eintippen.";
     else { h.textContent = "Tippen und auf Deutsch sprechen"; if (HEARD.trim()) doTranslate(); }
@@ -2085,7 +2085,7 @@ function bindDictation() {
     if (DMODE === "tr") return trMicState(state, reason);
     const b = $("#micBtn"); if (b) b.classList.toggle("on", micOn);
     const hint = $("#micHint");
-    if (hint && state === "listening") hint.textContent = "Ich höre zu … tippe auf „Fertig“, wenn du fertig bist.";
+    if (hint && state === "listening") hint.textContent = "Ich höre zu … sprich jetzt. Nach einer kurzen Pause hört die App von selbst auf.";
     if (state === "idle" && reason && reason !== "stopped" && hint) hint.textContent = reason === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst die Aufgabe überspringen." : "Das hat nicht geklappt. Tippe nochmal aufs Mikrofon.";
   });
 }
@@ -2273,6 +2273,32 @@ function backupLoad(file) {
 }
 
 /* ---- speech recognition of the browser (Chrome), same shape as the dictation capability ---- */
+// Ergebnisse der Spracherkennung zu einem Satz zusammensetzen, ohne Wiederholungen
+function joinResults(results) {
+  const parts = [];
+  for (let i = 0; i < results.length; i++) {
+    const t = String(results[i][0].transcript || "").trim();
+    if (!t) continue;
+    const last = parts.length ? parts[parts.length - 1].toLowerCase() : "";
+    if (last && t.toLowerCase().startsWith(last)) parts[parts.length - 1] = t;      // neues Ergebnis enthält das alte
+    else if (last && last.endsWith(t.toLowerCase())) continue;                      // schon enthalten
+    else parts.push(t);
+  }
+  return dedupeWords(parts.join(" "));
+}
+// „Entschuldigung Entschuldigung was kostet“ → „Entschuldigung was kostet“ (gleiche Wortgruppe direkt hintereinander nur einmal)
+function dedupeWords(text) {
+  let w = text.split(/\s+/).filter(Boolean), changed = true;
+  while (changed) {
+    changed = false;
+    for (let n = Math.floor(w.length / 2); n >= 1 && !changed; n--)
+      for (let i = 0; i + 2 * n <= w.length; i++) {
+        const a = w.slice(i, i + n).join(" ").toLowerCase(), b = w.slice(i + n, i + 2 * n).join(" ").toLowerCase();
+        if (a === b) { w.splice(i + n, n); changed = true; break; }
+      }
+  }
+  return w.join(" ");
+}
 function webDict() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -2284,16 +2310,19 @@ function webDict() {
       return new Promise((ok, no) => {
         try {
           let reason = "stopped";
-          rec = new SR(); rec.lang = opts.lang || speechLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+          // Ein Satz pro Aufnahme (stoppt nach einer Sprechpause). Chrome auf Android schickt bei jedem Ergebnis den
+          // ganzen bisherigen Satz noch einmal – deshalb wird der Text jedes Mal neu zusammengesetzt und ersetzt,
+          // nicht angehängt, und erst am Ende einmal als fertiger Satz gemeldet.
+          let full = "";
+          rec = new SR(); rec.lang = opts.lang || speechLang(); rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
           h.s && h.s({ state: "starting" });
           rec.onstart = () => { h.s && h.s({ state: "listening" }); ok(); };
           rec.onresult = e => {
-            let interim = "";
-            for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) h.f && h.f({ text: x[0].transcript }); else interim += x[0].transcript; }
-            h.p && h.p({ text: interim });
+            full = joinResults(e.results);
+            h.p && h.p({ text: full });
           };
           rec.onerror = e => { reason = e.error === "not-allowed" || e.error === "service-not-allowed" ? "not_granted" : e.error === "no-speech" || e.error === "aborted" ? "stopped" : "upstream_error"; if (reason !== "stopped") no({ code: reason }); };
-          rec.onend = () => { rec = null; h.s && h.s({ state: "idle", reason }); if (done) { done(); done = null; } };
+          rec.onend = () => { rec = null; if (full) { h.p && h.p({ text: "" }); h.f && h.f({ text: full }); } h.s && h.s({ state: "idle", reason }); if (done) { done(); done = null; } };
           rec.start();
         } catch (e) { rec = null; no({ code: "unavailable" }); }
       });

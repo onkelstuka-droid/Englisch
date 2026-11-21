@@ -43,6 +43,7 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bi
 ## Übersetzen (seit 1.5, Wunsch: deutschen Satz einsprechen und übersetzen lassen)
 - Reiter „Übersetzen“ (`TAB === "trans"`, `transHtml`/`bindTrans`/`doTranslate`). Deutsch sprechen (Mikrofon, `DMODE = "tr"`, Spracherkennung `de-DE` über `DICT.start({language:"de", lang:"de-DE"})`) oder eintippen → Übersetzung nach Englisch bzw. Tagalog → wird vorgelesen.
 - Dienst: MyMemory (`api.mymemory.translated.net/get?q=…&langpair=de|en|tl`), kostenlos ohne Anmeldung, ca. 5000 Zeichen/Tag, keine E-Mail mitschicken. Fehler/Limit/offline → roter Kasten mit Link „Im Google Übersetzer öffnen“ (`gtLink`). Service Worker speichert diese Anfragen nicht. Im Claude-Sandbox-Proxy ist der Dienst gesperrt; Tests mit `page.route` nachstellen.
+- Spracherkennung (`webDict`): `continuous = false` (ein Satz, stoppt nach Pause), Text wird bei jedem Ergebnis neu zusammengesetzt (`joinResults`, `dedupeWords`) und erst am Ende einmal gemeldet. Grund: Chrome auf Android wiederholt im Dauer-Modus den bisherigen Satz („Entschuldigung Entschuldigung …“, Meldung des Nutzers, 1.5.1).
 - „Merken“ → `S.saved` [{id, d (deutsch), t (Übersetzung)}] je Sprache, Liste „Gemerkte Sätze“ mit Anhören/Löschen.
 
 ## Übungen und Logik
