@@ -46,6 +46,11 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bi
 - Spracherkennung (`webDict`): `continuous = false` (ein Satz, stoppt nach Pause), Text wird bei jedem Ergebnis neu zusammengesetzt (`joinResults`, `dedupeWords`) und erst am Ende einmal gemeldet. Grund: Chrome auf Android wiederholt im Dauer-Modus den bisherigen Satz („Entschuldigung Entschuldigung …“, Meldung des Nutzers, 1.5.1).
 - „Merken“ → `S.saved` [{id, d (deutsch), t (Übersetzung)}] je Sprache, Liste „Gemerkte Sätze“ mit Anhören/Löschen.
 
+## Antworten sprechen (seit 1.6)
+- Schreib-Aufgaben: Mikrofon neben dem Feld (`#ansMic`, `DMODE = "ans"`), Erkanntes landet im Feld, Nutzer tippt „Prüfen“ (kann vorher korrigieren).
+- Satzbau (build/buildL): Kasten „Oder sprich den ganzen Satz“ (`#buildMic`, `DMODE = "build"`), wird sofort mit `speakScore` ≥ 0,75 bewertet. Kärtchen gehen weiterhin.
+- Routing der Spracherkennung über `DMODE` ("task" | "tr" | "ans" | "build"), `ansHeard`/`ansMicState`. Erkennung in der Lernsprache (en-GB/en-US bzw. fil-PH).
+
 ## Übungen und Logik
 - Arten: mcEN (Englisch → Deutsch wählen), mcDE, listen (hören → Bedeutung), type (tippen, Tippfehler-Toleranz `lev`, Kurzformen `CONTRACT`), build/buildL (Satz aus Kärtchen, mit/ohne Ton), gram, speak (Spracherkennung), card (Karteikarte, selbst bewerten).
 - Sitzungen (`buildSession`): daily („Tägliche Runde“: fällige Wörter, neue aus dem aktuellen Thema + Wiederholung, 2 Sätze, 2 Grammatik), topic, listen, write, build, gram (auch je Kategorie), speak, mistakes, cards, redo.

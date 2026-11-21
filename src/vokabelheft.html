@@ -189,6 +189,12 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .build-line .tok{border-color:var(--blue);color:var(--blue)}
 .mic{width:110px;height:110px;border-radius:50%;margin:8px auto;display:grid;place-items:center;background:var(--red);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--red) 60%,#000)}
 .mic svg.i{width:44px;height:44px}
+.mic.sm{width:58px;height:58px;margin:0;flex:none;box-shadow:0 3px 0 color-mix(in srgb,var(--red) 60%,#000)}
+.mic.sm svg.i{width:26px;height:26px}
+.ans-row{display:flex;gap:10px;align-items:center}
+.ans-row .answer-in{flex:1;min-width:0}
+.speak-alt{display:flex;gap:12px;align-items:center;background:var(--sheet);border-radius:12px;padding:10px 12px;border:1.5px dashed var(--rule)}
+.speak-alt > div{min-width:0}
 .mic.on{animation:pulse 1.2s infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 14px color-mix(in srgb,var(--red) 25%,transparent)}}
 .heard{min-height:52px;font-size:19px;text-align:center;color:var(--ink)}
@@ -264,7 +270,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.5.1";
+const APP_VERSION = "1.6";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1894,7 +1900,8 @@ function renderTask() {
     foot = `<button class="go ghost" data-act="dunno">Weiß ich nicht</button>`;
   } else if (t.kind === "type") {
     body = `${newTag}<div class="t-label">Schreib es auf ${LN}</div><div class="prompt">${picHtml(it)}<div class="txt de">${esc(it.de)}</div></div>
-      <input class="answer-in" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="auf ${LN} …">
+      <div class="ans-row"><input class="answer-in" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="auf ${LN} …">${DICT ? `<button class="mic sm" id="ansMic" data-act="ansmic" aria-label="Antwort sprechen">${ICON.mic}</button>` : ""}</div>
+      ${DICT ? `<div class="hint" id="ansHint">Tippen oder aufs Mikrofon tippen und auf ${LN} sprechen.</div>` : ""}
       <button class="linkish" data-act="hint" style="justify-self:start;text-align:left">Tipp: Anfangsbuchstaben zeigen</button><div class="hint" id="hintTxt"></div>`;
     foot = `<button class="go" data-act="check">Prüfen</button>`;
   } else if (t.kind === "build" || t.kind === "buildL") {
@@ -1903,7 +1910,8 @@ function renderTask() {
     t.line = [];
     const prompt = t.kind === "build" ? `<div class="prompt"><div class="txt de" style="font-size:22px">${esc(it.de)}</div></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div><button class="linkish" data-act="showde" style="justify-self:center">Deutsche Übersetzung zeigen</button><div class="hint" id="deTxt" style="text-align:center"></div>`;
-    body = `${t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf " + LN : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>`;
+    body = `${t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf " + LN : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>
+      ${DICT ? `<div class="speak-alt"><button class="mic sm" id="buildMic" data-act="buildmic" aria-label="Satz sprechen">${ICON.mic}</button><div><b>Oder sprich den ganzen Satz</b><div class="hint" id="buildHint">Aufs Mikrofon tippen und auf ${LN} sprechen.</div><div id="buildHeard" style="font-weight:700;color:var(--blue)"></div></div></div>` : ""}`;
     foot = `<button class="go" data-act="check" disabled id="chk">Prüfen</button>`;
   } else if (t.kind === "gram") {
     t.opts = t.opts || shuffle([it.a, ...it.wrong]);
@@ -1963,6 +1971,8 @@ function feedback(ok, opts = {}) {
 }
 
 function nextTask() {
+  if (micOn && DICT) { DICT.stop(); }
+  DMODE = "task";
   SES.i++;
   if (SES.i >= SES.tasks.length) return finishSession();
   renderTask();
@@ -2069,16 +2079,42 @@ async function doTranslate() {
 /* ---- dictation for the speaking task ---- */
 let HEARD = "", PARTIAL = "", micOn = false;
 function bindDictation() {
-  DICT.onPartial(({ text }) => { PARTIAL = text; if (DMODE === "tr") return trHeard(); const h = $("#heard"); if (h) h.textContent = (HEARD + " " + PARTIAL).trim(); });
-  DICT.onFinal(({ text }) => { HEARD = (HEARD + " " + text).trim(); PARTIAL = ""; if (DMODE === "tr") return trHeard(); const h = $("#heard"); if (h) h.textContent = HEARD; const c = $("#chk"); if (c) c.disabled = !HEARD; });
+  DICT.onPartial(({ text }) => { PARTIAL = text; if (DMODE === "tr") return trHeard(); if (DMODE === "ans" || DMODE === "build") return ansHeard(); const h = $("#heard"); if (h) h.textContent = (HEARD + " " + PARTIAL).trim(); });
+  DICT.onFinal(({ text }) => { HEARD = (HEARD + " " + text).trim(); PARTIAL = ""; if (DMODE === "tr") return trHeard(); if (DMODE === "ans" || DMODE === "build") return ansHeard(); const h = $("#heard"); if (h) h.textContent = HEARD; const c = $("#chk"); if (c) c.disabled = !HEARD; });
   DICT.onState(({ state, reason }) => {
     micOn = state === "listening" || state === "starting";
     if (DMODE === "tr") return trMicState(state, reason);
+    if (DMODE === "ans" || DMODE === "build") return ansMicState(state, reason);
     const b = $("#micBtn"); if (b) b.classList.toggle("on", micOn);
     const hint = $("#micHint");
     if (hint && state === "listening") hint.textContent = "Ich höre zu … sprich jetzt. Nach einer kurzen Pause hört die App von selbst auf.";
     if (state === "idle" && reason && reason !== "stopped" && hint) hint.textContent = reason === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst die Aufgabe überspringen." : "Das hat nicht geklappt. Tippe nochmal aufs Mikrofon.";
   });
+}
+/* Antwort sprechen statt tippen (Schreiben) bzw. Satz sprechen statt bauen (Satzbau) */
+function ansHeard() {
+  const txt = (HEARD + " " + PARTIAL).trim();
+  if (DMODE === "ans") { const a = $("#ans"); if (a) a.value = txt; }
+  else { const h = $("#buildHeard"); if (h) h.textContent = txt; }
+}
+function ansMicState(state, reason) {
+  const mode = DMODE, b = $(mode === "ans" ? "#ansMic" : "#buildMic"), h = $(mode === "ans" ? "#ansHint" : "#buildHint");
+  if (b) b.classList.toggle("on", micOn);
+  if (h && state === "listening") h.textContent = "Ich höre zu … sprich jetzt.";
+  if (state !== "idle") return;
+  DMODE = "task";
+  const txt = HEARD.trim();
+  if (reason && reason !== "stopped" && reason !== "viewer_stopped") { if (h) h.textContent = reason === "not_granted" ? "Mikrofon ist nicht erlaubt. Bitte tippen." : "Das hat nicht geklappt. Nochmal versuchen oder tippen."; return; }
+  if (!txt) { if (h) h.textContent = "Nichts verstanden. Nochmal aufs Mikrofon tippen."; return; }
+  if (mode === "ans") { if (h) h.textContent = "Stimmt das so? Dann auf „Prüfen“ tippen – oder vorher korrigieren."; const c = $("#foot [data-act=check]"); if (c) c.focus(); }
+  else {
+    const t = SES && SES.tasks[SES.i];
+    if (!t || SES.answered || (t.kind !== "build" && t.kind !== "buildL")) return;
+    if (h) h.textContent = "Verstanden:";
+    const ok = speakScore(txt, t.item.en) >= 0.75;
+    document.querySelectorAll("#session .tok").forEach(x => (x.disabled = true));
+    grade(t, ok, "speakOk"); feedback(ok, { heard: txt });
+  }
 }
 function speakScore(heard, target) {
   const h = norm(heard).split(" "), tw = norm(target).split(" ").filter(Boolean);
@@ -2104,6 +2140,12 @@ function act(a, el) {
     case "testvoice": return say(LANGS[LANG].probe);
     case "voicehelp": return voiceHelp();
     case "trgo": return doTranslate();
+    case "ansmic": case "buildmic":
+      if (!DICT || SES.answered) return;
+      if (micOn) { DICT.stop(); return; }
+      DMODE = a === "ansmic" ? "ans" : "build"; HEARD = ""; PARTIAL = "";
+      DICT.start({ language: LANG === "tl" ? "fil" : "en" }).catch(e => { DMODE = "task"; const h = $(a === "ansmic" ? "#ansHint" : "#buildHint"); if (h && e && e.code !== "stopped") h.textContent = e.code === "not_granted" ? "Mikrofon ist nicht erlaubt. Bitte tippen." : "Spracherkennung gerade nicht möglich. Bitte tippen."; });
+      return;
     case "trmic":
       if (!DICT) return;
       if (micOn) { DICT.stop(); return; }
@@ -2163,6 +2205,7 @@ function markOpts(chosen) {
 }
 async function check(t) {
   if (SES.answered) return;
+  if (micOn && DICT && (DMODE === "ans" || DMODE === "build")) { DMODE = "task"; await DICT.stop(); }
   if (t.kind === "type") {
     const r = checkTyped($("#ans").value, t.item.en);
     if (r === "no" && !$("#ans").value.trim()) { $("#ans").focus(); return; }
