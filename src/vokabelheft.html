@@ -271,7 +271,7 @@ mark.hl{background:var(--marker);color:var(--on-marker);border-radius:3px;paddin
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.7.2";
+const APP_VERSION = "1.7.3";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -2137,8 +2137,7 @@ function speakDevice(text, slow) {
 }
 /* Aussprache-Test: mehrere Texte nacheinander vorlesen, ohne Vorbereitung */
 const PTEST = {
-  a: [["bulaklak", "kapitbahay"], ["bu-lak-lak", "ka-pit-ba-hay"], ["bulaklák", "kapitbáhay"]],
-  b: [["pangalan"], ["pangálan"], ["pa-ngá-lan"], ["pa-ngalan"], ["pa ngalan"], ["pangngalan"]]
+  b: [["pang-álan"], ["pang álan"], ["pang-alan"], ["pañgálan"], ["pa ngálan"], ["pangáalan"]]
 };
 function speakSeq(list) {
   if (!deviceOK()) return;
@@ -2165,14 +2164,17 @@ function tlSyl(w) {
   }
   return units.map((u, i) => (cuts.has(i) ? "-" : "") + u).join("");
 }
+/* Betonung für längere Wörter (Wörterbuch-Schreibweise mit Akzent). Nutzer-Test A3 (bulaklák, kapitbáhay) klang richtig,
+   ohne Zeichen und mit Bindestrichen falsch (1.7.3). */
+const TL_STRESS = {"bulaklak":"bulaklák","kapitbahay":"kapitbáhay","lalaki":"laláki","kaibigan":"kaibígan","magulang":"magúlang","kapatid":"kapatíd","sanggol":"sanggól","pamilya":"pamílya","luntian":"luntián","madilim":"madilím","kayumanggi":"kayumanggí","dalawa":"dalawá","labindalawa":"labindalawá","labintatlo":"labintatló","dalawampu":"dalawampú","tatlumpu":"tatlumpú","limampu":"limampú","pangalawa":"pangalawá","pangatlo":"pangatló","kalahati":"kalaháti","tinapay":"tinápay","almusal":"almusál","tanghalian":"tanghalían","hapunan":"hapúnan","masarap":"masárap","mansanas":"mansánas","patatas":"patátas","serbesa":"serbésa","kumusta":"kumustá","magandang":"magandáng","maraming":"maráming","salamat":"salámat","pakiusap":"pakiúsap","pasensya":"pasénsya","anuman":"anumán","kuwarto":"kuwárto","kusina":"kusína","bintana":"bintána","aparador":"aparadór","dingding":"dingdíng","hagdan":"hagdán","bakuran":"bakúran","hardin":"hardín","upuan":"upuán","bubong":"búbong","bestida":"bestída","kamiseta":"kamiséta","pantalon":"pantalón","sapatos":"sapátos","tsinelas":"tsinélas","medyas":"médyas","sumbrero":"sumbréro","guwantes":"guwántes","bupanda":"bupánda","magsuot":"magsúot","tainga":"taínga","doktor":"doktór","ospital":"ospitál","masakit":"masakít","malusog":"malúsog","panahon":"panáhon","maalinsangan":"maalinsángan","taglamig":"taglámig","mainit":"maínit","malamig":"malámig","maaraw":"maáraw","maulan":"maúlan","niyebe":"niyébe","malaki":"malakí","maliit":"maliít","matanda":"matandá","mabuti":"mabúti","masama":"masamá","maganda":"magandá","mabilis":"mabilís","mabagal":"mabagál","mahirap":"mahírap","masaya":"masayá","malungkot":"malúngkot","mahalaga":"mahalagá","mahaba":"mahabá","maikli":"maiklí","mabait":"mabáit","ngayon":"ngayón","ngayong":"ngayóng","kahapon":"kahápon","mamaya":"mamayá","palagi":"palagí","madalas":"madálas","minsan":"minsán","kailanman":"kailanmán","minuto":"minúto","pumunta":"pumuntá","dumating":"dumáting","makita":"makíta","gumawa":"gumawá","sabihin":"sabihín","malaman":"maláman","kumuha":"kumuhá","magbigay":"magbigáy","hanapin":"hanapín","kailangan":"kailángan","kumain":"kumáin","uminom":"umínom","matulog":"matulóg","tumulong":"tumúlong","maintindihan":"maintindíhan","magtrabaho":"magtrabáho","magsalita":"magsalitá","maglakad":"maglakád","tindahan":"tindáhan","palengke":"paléngke","panaderya":"panadérya","botika":"botíka","presyo":"présyo","magkano":"magkáno","bumili":"bumíli","magbayad":"magbáyad","resibo":"resíbo","sarado":"sarádo","eroplano":"eropláno","bisikleta":"bisikléta","istasyon":"istasyón","paliparan":"palipáran","kaliwa":"kaliwá","diretso":"dirétso","maleta":"maléta","pasaporte":"pasapórte","magbiyahe":"magbiyáhe","magmaneho":"magmaného","trapik":"trápik","libangan":"libángan","musika":"músika","pelikula":"pelíkula","handaan":"handaán","sinehan":"sínehan","lumangoy":"lumangóy","magbasa":"magbása","magluto":"maglutó","sumayaw":"sumáyaw","kumanta":"kumantá","maglaro":"maglaró","mamasyal":"mamasyál","makinig":"makiníg","manood":"manoód","trabaho":"trabáho","katrabaho":"katrabáho","bakasyon":"bakasyón","pabrika":"pábrika","opisina":"opisína","pahinga":"pahínga","suweldo":"suwéldo","magsimula":"magsimúla","matapos":"matápos","nagtatrabaho":"nagtatrabáho","naglalaro":"naglalaró","natutulog":"natutulóg","kumakanta":"kumakantá","nakatira":"nakatirá","pagkatapos":"pagkatápos","susunod":"susunód","tuwing":"tuwíng","kumakain":"kumakáin","umiinom":"umiínom","mahilig":"mahílig","marunong":"marúnong","gustong":"gústong","nasaan":"nasaán","magaling":"magalíng","pinakamatanda":"pinakamatandá"};
 function tlSpeak(text) {
-  const low = text.toLowerCase(), words = (low.match(/[a-zñ]+/g) || []).length;
+  const low = text.toLowerCase();
   return low
-    // einzelne Wörter / kurze Ausdrücke: alles trennen; in Sätzen nur kurze Wörter (bis 5 Buchstaben)
-    .replace(/[a-zñ]+/g, w => (w === "ng" || w === "mga" || w === "ang" || (words > 3 && w.length > 5)) ? w : tlSyl(w))
-    .replace(/(^|[^a-zñ'-])ng(?=$|[^a-zñ'-])/g, "$1nang")
-    .replace(/(^|[^a-zñ'-])mga(?=$|[^a-zñ'-])/g, "$1manga")
-    .replace(/(^|[^a-zñ'-])ang(?=$|[^a-zñ'-])/g, "$1aang"); // „ang“ wurde als A-N-G buchstabiert; „aang“ klingt laut Nutzer-Test (Nr. 5) richtig
+    // kurze Wörter (bis 5 Buchstaben) in Silben trennen, sonst buchstabiert die Stimme sie; längere mit Betonungszeichen
+    .replace(/[a-zñ]+/g, w => (w === "ng" || w === "mga" || w === "ang") ? w : w.length <= 5 ? tlSyl(w) : (TL_STRESS[w] || w))
+    .replace(/(^|[^a-zñáéíóú'-])ng(?=$|[^a-zñáéíóú'-])/g, "$1nang")
+    .replace(/(^|[^a-zñáéíóú'-])mga(?=$|[^a-zñáéíóú'-])/g, "$1manga")
+    .replace(/(^|[^a-zñáéíóú'-])ang(?=$|[^a-zñáéíóú'-])/g, "$1aang"); // „ang“ wurde als A-N-G buchstabiert; „aang“ klingt laut Nutzer-Test (Nr. 5) richtig
 }
 function say(text, slow = false) {
   if (!text) return;
@@ -2437,12 +2439,10 @@ function settingsHtml() {
     ${langVoices().length > 1 ? `<select id="voiceSel" style="font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)">${langVoices().map(v => `<option value="${esc(v.name)}" ${devVoice && v.name === devVoice.name ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select>` : ""}
     <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button>
     ${LANG === "tl" ? `<div class="card" style="display:grid;gap:12px;margin-top:6px;border:2px solid var(--marker)">
-      <b>Aussprache-Test A: bulaklak · kapitbahay</b>
-      <span class="hint">Bei welcher Nummer klingen beide Wörter richtig?</span>
-      <div class="seg">${PTEST.a.map((v, i) => `<button data-ptest="a${i}">${i + 1}</button>`).join("")}</div>
-      <b>Aussprache-Test B: pangalan (Name)</b>
+      <b>Aussprache-Test: pangalan (Name), neue Versuche</b>
       <span class="hint">Richtig ist pa-<b>nga</b>-lan: „ng“ wie in „Engel“, Betonung auf der Mitte. Welche Nummer kommt am nächsten?</span>
       <div class="seg">${PTEST.b.map((v, i) => `<button data-ptest="b${i}">${i + 1}</button>`).join("")}</div>
+      <button class="go ghost" data-say="Bulaklak, kapitbahay, kaibigan, masarap, salamat, maganda." style="width:auto;justify-self:start;padding:10px 16px">Neue Betonung probehören</button>
     </div>` : ""}</div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
