@@ -51,6 +51,11 @@ Wünsche: Englisch und (seit 20.11.2026) Tagalog leicht lernen, anfangs keine Bi
 - Satzbau (build/buildL): Kasten „Oder sprich den ganzen Satz“ (`#buildMic`, `DMODE = "build"`), wird sofort mit `speakScore` ≥ 0,75 bewertet. Kärtchen gehen weiterhin.
 - Routing der Spracherkennung über `DMODE` ("task" | "tr" | "ans" | "build"), `ansHeard`/`ansMicState`. Erkennung in der Lernsprache (en-GB/en-US bzw. fil-PH).
 
+## Beispielsätze (seit 1.7, Wunsch: in der Lektion einen Satz mit den gerade gelernten Wörtern)
+- `EX_RAW_EN` / `EX_RAW_TL`: je Wort `thema|wort|Satz|deutsch` (ca. 330 je Sprache; Wörter, die selbst ein Satz sind, haben keinen). Wird an `w.ex` gehängt (Lern-Schlüssel `x:<thema>:<wort>`, kind "s").
+- Tägliche Runde und Themen-Runde: am Ende je neues Wort eine Satzbau-Aufgabe mit dem Beispielsatz (`sentTask(w.ex, "build")`, Hinweis „Satz mit deinem neuen Wort“), Wort in der Rückmeldung gelb markiert (`hlWord`). Ergebnis-Seite: „Deine neuen Wörter im Satz“ (`SES.freshWords`).
+- Neues Wort = auch Beispielsatz ergänzen; der Satz muss die erste Schreibweise des Wortes enthalten (Test: `hlWord` findet es).
+
 ## Übungen und Logik
 - Arten: mcEN (Englisch → Deutsch wählen), mcDE, listen (hören → Bedeutung), type (tippen, Tippfehler-Toleranz `lev`, Kurzformen `CONTRACT`), build/buildL (Satz aus Kärtchen, mit/ohne Ton), gram, speak (Spracherkennung), card (Karteikarte, selbst bewerten).
 - Sitzungen (`buildSession`): daily („Tägliche Runde“: fällige Wörter, neue aus dem aktuellen Thema + Wiederholung, 2 Sätze, 2 Grammatik), topic, listen, write, build, gram (auch je Kategorie), speak, mistakes, cards, redo.

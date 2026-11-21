@@ -171,6 +171,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 .opts{display:grid;gap:10px}
 .opt{text-align:left;background:var(--sheet);border:2px solid var(--rule);border-radius:12px;padding:14px 16px;font-size:18px;font-weight:700;min-height:56px;overflow-wrap:anywhere}
 .opt:active{background:var(--tint)}
+mark.hl{background:var(--marker);color:var(--on-marker);border-radius:3px;padding:0 3px}
 .opt-m{display:block;font-weight:400;font-size:14.5px;color:var(--soft);margin-top:3px;text-decoration:none}
 .opt.wrong .opt-m{text-decoration:none;display:block}
 .opt.right{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--sheet))}
@@ -270,7 +271,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.6.2";
+const APP_VERSION = "1.7";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1278,6 +1279,672 @@ neg|___ ako gutom.|Hindi|Huwag,Wala|Ich bin nicht hungrig.
 neg|___ kang umalis!|Huwag|Hindi,Wala|Geh nicht weg!
 neg|___ ko alam.|Hindi|Huwag,Wala|Ich weiß es nicht.`;
 
+/* Beispielsätze je Wort: thema|wort|Satz in der Lernsprache|deutsch (seit 1.7, Wunsch: Satz mit den gerade gelernten Wörtern) */
+const EX_RAW_EN = `basic|woman|The woman is nice.|Die Frau ist nett.
+basic|man|The man is tall.|Der Mann ist groß.
+basic|child|The child is small.|Das Kind ist klein.
+basic|boy|The boy is happy.|Der Junge ist froh.
+basic|girl|The girl is my daughter.|Das Mädchen ist meine Tochter.
+basic|people|The people are friendly.|Die Leute sind freundlich.
+basic|I|I am tired.|Ich bin müde.
+basic|you|You are my friend.|Du bist mein Freund.
+basic|he|He is my brother.|Er ist mein Bruder.
+basic|she|She is my sister.|Sie ist meine Schwester.
+basic|we|We are at home.|Wir sind zu Hause.
+basic|dog|My dog is black.|Mein Hund ist schwarz.
+basic|cat|The cat is sleeping.|Die Katze schläft.
+basic|bird|The bird is singing.|Der Vogel singt.
+basic|tree|The tree is very big.|Der Baum ist sehr groß.
+basic|flower|This flower is beautiful.|Diese Blume ist schön.
+basic|phone|Where is my phone?|Wo ist mein Handy?
+basic|name|My name is Tom.|Mein Name ist Tom.
+family|mother|My mother is at home.|Meine Mutter ist zu Hause.
+family|father|My father works a lot.|Mein Vater arbeitet viel.
+family|parents|My parents live in Berlin.|Meine Eltern wohnen in Berlin.
+family|brother|My brother is older than me.|Mein Bruder ist älter als ich.
+family|sister|My sister has two children.|Meine Schwester hat zwei Kinder.
+family|son|My son is ten years old.|Mein Sohn ist zehn Jahre alt.
+family|daughter|My daughter likes music.|Meine Tochter mag Musik.
+family|children|The children are playing.|Die Kinder spielen.
+family|wife|My wife is a nurse.|Meine Frau ist Krankenschwester.
+family|husband|Her husband is a cook.|Ihr Mann ist Koch.
+family|grandmother / grandma|My grandmother is eighty.|Meine Oma ist achtzig.
+family|grandfather / grandpa|My grandfather tells stories.|Mein Opa erzählt Geschichten.
+family|uncle|My uncle has a big car.|Mein Onkel hat ein großes Auto.
+family|aunt|My aunt lives in Munich.|Meine Tante wohnt in München.
+family|friend|He is my best friend.|Er ist mein bester Freund.
+family|neighbour / neighbor|Our neighbour is very nice.|Unser Nachbar ist sehr nett.
+family|baby|The baby is sleeping.|Das Baby schläft.
+family|family|My family is big.|Meine Familie ist groß.
+colors|red|The car is red.|Das Auto ist rot.
+colors|blue|The sky is blue.|Der Himmel ist blau.
+colors|green|The grass is green.|Das Gras ist grün.
+colors|yellow|The banana is yellow.|Die Banane ist gelb.
+colors|black|My cat is black.|Meine Katze ist schwarz.
+colors|white|The snow is white.|Der Schnee ist weiß.
+colors|grey / gray|The sky is grey today.|Der Himmel ist heute grau.
+colors|brown|I have brown eyes.|Ich habe braune Augen.
+colors|orange|The orange is orange.|Die Orange ist orange.
+colors|pink|She has a pink dress.|Sie hat ein rosa Kleid.
+colors|purple|I like purple flowers.|Ich mag lila Blumen.
+colors|dark|It is dark outside.|Draußen ist es dunkel.
+colors|colour / color|What colour is your car?|Welche Farbe hat dein Auto?
+numbers|one|I have one brother.|Ich habe einen Bruder.
+numbers|two|I have two children.|Ich habe zwei Kinder.
+numbers|three|We need three tickets.|Wir brauchen drei Fahrkarten.
+numbers|four|The table has four legs.|Der Tisch hat vier Beine.
+numbers|five|I work five days a week.|Ich arbeite fünf Tage in der Woche.
+numbers|six|My shift starts at six.|Meine Schicht beginnt um sechs.
+numbers|seven|A week has seven days.|Eine Woche hat sieben Tage.
+numbers|eight|I sleep eight hours.|Ich schlafe acht Stunden.
+numbers|nine|The film starts at nine.|Der Film beginnt um neun.
+numbers|ten|It costs ten euros.|Es kostet zehn Euro.
+numbers|eleven|My son is eleven.|Mein Sohn ist elf.
+numbers|twelve|A year has twelve months.|Ein Jahr hat zwölf Monate.
+numbers|thirteen|She is thirteen years old.|Sie ist dreizehn Jahre alt.
+numbers|twenty|I need twenty minutes.|Ich brauche zwanzig Minuten.
+numbers|thirty|It is thirty degrees today.|Heute sind es dreißig Grad.
+numbers|fifty|I am fifty years old.|Ich bin fünfzig Jahre alt.
+numbers|a hundred / one hundred|It costs a hundred euros.|Es kostet hundert Euro.
+numbers|a thousand / one thousand|The city has a thousand people.|Die Stadt hat tausend Einwohner.
+numbers|first|This is my first time here.|Ich bin zum ersten Mal hier.
+numbers|second|Take the second street.|Nimm die zweite Straße.
+numbers|third|I live on the third floor.|Ich wohne im dritten Stock.
+numbers|half|It is half past seven.|Es ist halb acht.
+food|bread|I buy bread every day.|Ich kaufe jeden Tag Brot.
+food|butter|I like bread with butter.|Ich mag Brot mit Butter.
+food|cheese|The cheese is very good.|Der Käse ist sehr gut.
+food|egg|I eat an egg for breakfast.|Ich esse ein Ei zum Frühstück.
+food|meat|I don't eat meat.|Ich esse kein Fleisch.
+food|fish|We eat fish on Friday.|Wir essen am Freitag Fisch.
+food|chicken|The chicken is hot.|Das Hähnchen ist heiß.
+food|potato|I like potato soup.|Ich mag Kartoffelsuppe.
+food|vegetables|Vegetables are healthy.|Gemüse ist gesund.
+food|fruit|I eat fruit every day.|Ich esse jeden Tag Obst.
+food|apple|The apple is red.|Der Apfel ist rot.
+food|water|A glass of water, please.|Ein Glas Wasser, bitte.
+food|coffee|I drink coffee in the morning.|Ich trinke morgens Kaffee.
+food|tea|Would you like tea?|Möchtest du Tee?
+food|milk|The milk is cold.|Die Milch ist kalt.
+food|beer|One beer, please.|Ein Bier, bitte.
+food|juice|The children drink juice.|Die Kinder trinken Saft.
+food|breakfast|Breakfast is ready.|Das Frühstück ist fertig.
+food|lunch|We have lunch at twelve.|Wir essen um zwölf zu Mittag.
+food|dinner|Dinner is at seven.|Das Abendessen ist um sieben.
+food|hungry|I am very hungry.|Ich habe großen Hunger.
+food|thirsty|Are you thirsty?|Hast du Durst?
+food|the bill / the check|Can I have the bill, please?|Kann ich bitte die Rechnung haben?
+greet|hello / hi|Hello, how are you?|Hallo, wie geht es dir?
+greet|good morning|Good morning, Anna!|Guten Morgen, Anna!
+greet|good evening|Good evening, everybody!|Guten Abend zusammen!
+greet|goodbye / bye|Goodbye, see you tomorrow!|Auf Wiedersehen, bis morgen!
+greet|please|A coffee, please.|Einen Kaffee, bitte.
+greet|thank you / thanks|Thank you for your help.|Danke für deine Hilfe.
+greet|you're welcome|"Thanks!" – "You're welcome."|„Danke!“ – „Gern geschehen.“
+greet|sorry|Sorry, I am late.|Entschuldigung, ich bin spät dran.
+greet|excuse me|Excuse me, where is the station?|Entschuldigen Sie, wo ist der Bahnhof?
+greet|yes|Yes, I understand.|Ja, ich verstehe.
+greet|no|No, thank you.|Nein, danke.
+greet|see you later|Bye, see you later!|Tschüss, bis später!
+home|house|Our house is old.|Unser Haus ist alt.
+home|flat / apartment|My flat is small.|Meine Wohnung ist klein.
+home|room|This room is big.|Dieses Zimmer ist groß.
+home|kitchen|Mum is in the kitchen.|Mama ist in der Küche.
+home|bathroom|The bathroom is upstairs.|Das Badezimmer ist oben.
+home|bedroom|The bedroom is quiet.|Das Schlafzimmer ist ruhig.
+home|living room|We watch TV in the living room.|Wir sehen im Wohnzimmer fern.
+home|garden|The children play in the garden.|Die Kinder spielen im Garten.
+home|door|Please close the door.|Bitte schließ die Tür.
+home|window|Open the window, please.|Mach bitte das Fenster auf.
+home|table|The keys are on the table.|Die Schlüssel liegen auf dem Tisch.
+home|chair|Take a chair.|Nimm dir einen Stuhl.
+home|bed|I go to bed at ten.|Ich gehe um zehn ins Bett.
+home|key|I can't find my key.|Ich finde meinen Schlüssel nicht.
+home|stairs|The stairs are steep.|Die Treppe ist steil.
+home|wall|The wall is white.|Die Wand ist weiß.
+home|roof|The roof is red.|Das Dach ist rot.
+home|cupboard|The cups are in the cupboard.|Die Tassen sind im Schrank.
+home|light|Turn on the light, please.|Mach bitte das Licht an.
+clothes|shirt|I need a new shirt.|Ich brauche ein neues Hemd.
+clothes|T-shirt|This T-shirt is too big.|Dieses T-Shirt ist zu groß.
+clothes|trousers / pants|My trousers are blue.|Meine Hose ist blau.
+clothes|dress|She has a red dress.|Sie hat ein rotes Kleid.
+clothes|skirt|The skirt is short.|Der Rock ist kurz.
+clothes|jacket|Take a jacket, it is cold.|Nimm eine Jacke, es ist kalt.
+clothes|coat|My coat is warm.|Mein Mantel ist warm.
+clothes|shoes|I need new shoes.|Ich brauche neue Schuhe.
+clothes|socks|My socks are wet.|Meine Socken sind nass.
+clothes|hat|He wears a hat.|Er trägt einen Hut.
+clothes|cap|My son has a blue cap.|Mein Sohn hat eine blaue Mütze.
+clothes|gloves|Where are my gloves?|Wo sind meine Handschuhe?
+clothes|scarf|This scarf is warm.|Dieser Schal ist warm.
+clothes|jumper / sweater|I like your jumper.|Ich mag deinen Pullover.
+clothes|size|What size are you?|Welche Größe hast du?
+clothes|to wear|I wear a jacket today.|Ich trage heute eine Jacke.
+body|head|My head hurts.|Mein Kopf tut weh.
+body|eye|My eye is red.|Mein Auge ist rot.
+body|ear|My ear hurts.|Mein Ohr tut weh.
+body|nose|My nose is cold.|Meine Nase ist kalt.
+body|mouth|Open your mouth, please.|Mach bitte den Mund auf.
+body|hand|Give me your hand.|Gib mir deine Hand.
+body|arm|My arm hurts.|Mein Arm tut weh.
+body|leg|He broke his leg.|Er hat sich das Bein gebrochen.
+body|foot|My foot hurts.|Mein Fuß tut weh.
+body|back|My back hurts.|Mein Rücken tut weh.
+body|stomach|My stomach hurts.|Mein Bauch tut weh.
+body|tooth|I have a bad tooth.|Ich habe einen schlechten Zahn.
+body|doctor|I need a doctor.|Ich brauche einen Arzt.
+body|hospital|She is in hospital.|Sie ist im Krankenhaus.
+body|medicine|Take this medicine.|Nimm dieses Medikament.
+body|ill / sick|I am sick today.|Ich bin heute krank.
+body|pain|I have pain in my back.|Ich habe Schmerzen im Rücken.
+body|headache|I have a headache.|Ich habe Kopfschmerzen.
+body|cold|I have a cold.|Ich bin erkältet.
+body|healthy|Fruit is healthy.|Obst ist gesund.
+days|Monday|Today is Monday.|Heute ist Montag.
+days|Tuesday|I work on Tuesday.|Ich arbeite am Dienstag.
+days|Wednesday|See you on Wednesday.|Bis Mittwoch.
+days|Thursday|On Thursday I have a day off.|Am Donnerstag habe ich frei.
+days|Friday|Friday is my favourite day.|Freitag ist mein Lieblingstag.
+days|Saturday|On Saturday we go shopping.|Am Samstag gehen wir einkaufen.
+days|Sunday|On Sunday I sleep long.|Am Sonntag schlafe ich lange.
+days|January|January is cold.|Der Januar ist kalt.
+days|February|February is short.|Der Februar ist kurz.
+days|March|Spring starts in March.|Im März beginnt der Frühling.
+days|April|My birthday is in April.|Mein Geburtstag ist im April.
+days|May|May is beautiful.|Der Mai ist schön.
+days|June|We fly in June.|Wir fliegen im Juni.
+days|July|July is hot.|Der Juli ist heiß.
+days|August|I am on holiday in August.|Im August habe ich Urlaub.
+days|September|School starts in September.|Im September beginnt die Schule.
+days|October|In October the leaves fall.|Im Oktober fallen die Blätter.
+days|November|November is grey.|Der November ist grau.
+days|December|Christmas is in December.|Weihnachten ist im Dezember.
+weather|weather|The weather is nice today.|Das Wetter ist heute schön.
+weather|sun|The sun is shining.|Die Sonne scheint.
+weather|rain|I don't like rain.|Ich mag keinen Regen.
+weather|snow|The children love snow.|Die Kinder lieben Schnee.
+weather|wind|The wind is strong.|Der Wind ist stark.
+weather|cloud|There is a big cloud.|Da ist eine große Wolke.
+weather|storm|A storm is coming.|Ein Sturm kommt.
+weather|warm|It is warm today.|Heute ist es warm.
+weather|hot|It is very hot.|Es ist sehr heiß.
+weather|cold|It is cold outside.|Draußen ist es kalt.
+weather|sunny|Tomorrow will be sunny.|Morgen wird es sonnig.
+weather|rainy|It is a rainy day.|Es ist ein regnerischer Tag.
+weather|spring|I love spring.|Ich liebe den Frühling.
+weather|summer|In summer we go swimming.|Im Sommer gehen wir schwimmen.
+weather|autumn / fall|Autumn is colourful.|Der Herbst ist bunt.
+weather|winter|Winter is long here.|Der Winter ist hier lang.
+weather|temperature|The temperature is low.|Die Temperatur ist niedrig.
+adj|big / large|We have a big garden.|Wir haben einen großen Garten.
+adj|small / little|The room is small.|Das Zimmer ist klein.
+adj|old|My car is old.|Mein Auto ist alt.
+adj|new|I have a new phone.|Ich habe ein neues Handy.
+adj|young|She is very young.|Sie ist sehr jung.
+adj|good|The food is good.|Das Essen ist gut.
+adj|bad|The weather is bad.|Das Wetter ist schlecht.
+adj|beautiful|What a beautiful day!|Was für ein schöner Tag!
+adj|fast|The train is fast.|Der Zug ist schnell.
+adj|slow|The bus is slow.|Der Bus ist langsam.
+adj|easy|English is easy.|Englisch ist leicht.
+adj|difficult|This is difficult.|Das ist schwierig.
+adj|happy|I am happy today.|Ich bin heute glücklich.
+adj|sad|Why are you sad?|Warum bist du traurig?
+adj|tired|I am tired after work.|Nach der Arbeit bin ich müde.
+adj|correct / right|That is right.|Das ist richtig.
+adj|wrong|That is wrong.|Das ist falsch.
+adj|important|This is important.|Das ist wichtig.
+adj|long|The day was long.|Der Tag war lang.
+adj|short|The film is short.|Der Film ist kurz.
+time|today|Today I have a day off.|Heute habe ich frei.
+time|tomorrow|See you tomorrow.|Bis morgen.
+time|yesterday|Yesterday I worked late.|Gestern habe ich lange gearbeitet.
+time|now|I am at home now.|Ich bin jetzt zu Hause.
+time|later|I will call you later.|Ich rufe dich später an.
+time|early|I get up early.|Ich stehe früh auf.
+time|late|It is late.|Es ist spät.
+time|morning|I drink coffee in the morning.|Am Morgen trinke ich Kaffee.
+time|hour|The film is one hour long.|Der Film dauert eine Stunde.
+time|minute|Wait a minute, please.|Warte bitte eine Minute.
+time|day|Have a nice day!|Einen schönen Tag noch!
+time|week|I work this week.|Ich arbeite diese Woche.
+time|month|Next month I am on holiday.|Nächsten Monat habe ich Urlaub.
+time|year|This year we go to London.|Dieses Jahr fahren wir nach London.
+time|weekend|Have a nice weekend!|Schönes Wochenende!
+time|always|I always drink tea.|Ich trinke immer Tee.
+time|often|We often eat fish.|Wir essen oft Fisch.
+time|sometimes|Sometimes I work at night.|Manchmal arbeite ich nachts.
+time|never|I never eat meat.|Ich esse nie Fleisch.
+time|o'clock|It is eight o'clock.|Es ist acht Uhr.
+verbs|to be|I want to be happy.|Ich will glücklich sein.
+verbs|to have|I have a cat.|Ich habe eine Katze.
+verbs|to go|I go to work.|Ich gehe zur Arbeit.
+verbs|to come|Come here, please.|Komm bitte her.
+verbs|to see|I can see the sea.|Ich kann das Meer sehen.
+verbs|to make / to do|I make coffee.|Ich mache Kaffee.
+verbs|to say|What did you say?|Was hast du gesagt?
+verbs|to know|I know the answer.|Ich weiß die Antwort.
+verbs|to take|Take the bus.|Nimm den Bus.
+verbs|to give|Give me the book, please.|Gib mir bitte das Buch.
+verbs|to find|I can't find my keys.|Ich finde meine Schlüssel nicht.
+verbs|to think|I think so.|Ich denke schon.
+verbs|to want|I want a coffee.|Ich will einen Kaffee.
+verbs|to need|I need help.|Ich brauche Hilfe.
+verbs|to like|I like music.|Ich mag Musik.
+verbs|to eat|We eat at seven.|Wir essen um sieben.
+verbs|to drink|I drink water.|Ich trinke Wasser.
+verbs|to sleep|I sleep after the night shift.|Nach der Nachtschicht schlafe ich.
+verbs|to help|Can you help me?|Kannst du mir helfen?
+verbs|to learn|I learn English.|Ich lerne Englisch.
+verbs|to understand|I understand you.|Ich verstehe dich.
+shop|shop / store|The shop is closed.|Das Geschäft ist geschlossen.
+shop|supermarket|I go to the supermarket.|Ich gehe zum Supermarkt.
+shop|bakery|The bakery opens at six.|Die Bäckerei öffnet um sechs.
+shop|pharmacy / chemist's|Where is the pharmacy?|Wo ist die Apotheke?
+shop|money|I have no money.|Ich habe kein Geld.
+shop|price|The price is good.|Der Preis ist gut.
+shop|cheap|This shirt is cheap.|Dieses Hemd ist billig.
+shop|expensive|That is too expensive.|Das ist zu teuer.
+shop|to buy|I want to buy bread.|Ich will Brot kaufen.
+shop|to pay|Where can I pay?|Wo kann ich bezahlen?
+shop|cash|I pay in cash.|Ich zahle bar.
+shop|card|Can I pay by card?|Kann ich mit Karte zahlen?
+shop|receipt|Here is your receipt.|Hier ist Ihr Kassenbon.
+shop|bag|Do you need a bag?|Brauchen Sie eine Tüte?
+shop|open|Is the shop open?|Ist das Geschäft offen?
+shop|closed|The bank is closed.|Die Bank ist geschlossen.
+shop|customer|The customer is waiting.|Der Kunde wartet.
+shop|change|Here is your change.|Hier ist Ihr Wechselgeld.
+shop|special offer|Milk is on special offer.|Milch ist im Sonderangebot.
+travel|car|My car is red.|Mein Auto ist rot.
+travel|bus|The bus is late.|Der Bus hat Verspätung.
+travel|train|I take the train.|Ich nehme den Zug.
+travel|plane|The plane is full.|Das Flugzeug ist voll.
+travel|bike / bicycle|I go to work by bike.|Ich fahre mit dem Fahrrad zur Arbeit.
+travel|station|Where is the station?|Wo ist der Bahnhof?
+travel|airport|We go to the airport.|Wir fahren zum Flughafen.
+travel|ticket|I need a ticket.|Ich brauche eine Fahrkarte.
+travel|street / road|The street is long.|Die Straße ist lang.
+travel|left|Turn left here.|Bieg hier links ab.
+travel|right|Turn right at the corner.|Bieg an der Ecke rechts ab.
+travel|straight on / straight ahead|Go straight on.|Geh geradeaus.
+travel|map|Do you have a map?|Hast du einen Stadtplan?
+travel|hotel|The hotel is near the sea.|Das Hotel ist nah am Meer.
+travel|suitcase|My suitcase is heavy.|Mein Koffer ist schwer.
+travel|passport|Here is my passport.|Hier ist mein Reisepass.
+travel|to travel|I like to travel.|Ich reise gern.
+travel|to drive|I drive to work.|Ich fahre mit dem Auto zur Arbeit.
+travel|traffic jam|We are in a traffic jam.|Wir stehen im Stau.
+travel|petrol station / gas station|The petrol station is closed.|Die Tankstelle ist geschlossen.
+free|free time|What do you do in your free time?|Was machst du in deiner Freizeit?
+free|hobby|My hobby is cooking.|Mein Hobby ist Kochen.
+free|music|I like this music.|Ich mag diese Musik.
+free|film / movie|The film was good.|Der Film war gut.
+free|book|I read a book.|Ich lese ein Buch.
+free|game|Let's play a game.|Lass uns ein Spiel spielen.
+free|football / soccer|My son plays football.|Mein Sohn spielt Fußball.
+free|party|The party is on Saturday.|Die Party ist am Samstag.
+free|cinema|We go to the cinema.|Wir gehen ins Kino.
+free|to swim|I like to swim.|Ich schwimme gern.
+free|to read|I read every evening.|Ich lese jeden Abend.
+free|to cook|My wife likes to cook.|Meine Frau kocht gern.
+free|to dance|Let's dance!|Lass uns tanzen!
+free|to sing|She can sing very well.|Sie kann sehr gut singen.
+free|to play|The children play outside.|Die Kinder spielen draußen.
+free|to go for a walk|We go for a walk.|Wir gehen spazieren.
+free|to watch TV|I watch TV in the evening.|Abends sehe ich fern.
+free|to listen to music|I listen to music at work.|Bei der Arbeit höre ich Musik.
+work|work / job|I like my job.|Ich mag meine Arbeit.
+work|colleague|My colleague is nice.|Mein Kollege ist nett.
+work|boss|The boss is in the office.|Der Chef ist im Büro.
+work|shift|My shift starts at two.|Meine Schicht beginnt um zwei.
+work|early shift|I have early shift this week.|Diese Woche habe ich Frühschicht.
+work|late shift|The late shift ends at ten.|Die Spätschicht endet um zehn.
+work|night shift|After the night shift I sleep.|Nach der Nachtschicht schlafe ich.
+work|overtime|I worked overtime.|Ich habe Überstunden gemacht.
+work|holiday / vacation|I am on holiday next week.|Nächste Woche habe ich Urlaub.
+work|day off|Tomorrow is my day off.|Morgen ist mein freier Tag.
+work|factory|I work in a factory.|Ich arbeite in einer Fabrik.
+work|office|The office is on the first floor.|Das Büro ist im ersten Stock.
+work|break|Let's take a break.|Lass uns Pause machen.
+work|wages / salary|The wages are good.|Der Lohn ist gut.
+work|meeting|The meeting is at nine.|Die Besprechung ist um neun.
+work|appointment|I have an appointment at the doctor.|Ich habe einen Termin beim Arzt.
+work|sick note|I need a sick note.|Ich brauche eine Krankmeldung.
+work|to start|We start at six.|Wir fangen um sechs an.
+work|to finish|I finish at two.|Ich höre um zwei auf.`;
+const EX_RAW_TL = `basic|babae|Mabait ang babae.|Die Frau ist nett.
+basic|lalaki|Matangkad ang lalaki.|Der Mann ist groß.
+basic|bata|Maliit pa ang bata.|Das Kind ist noch klein.
+basic|batang lalaki|Masaya ang batang lalaki.|Der Junge ist froh.
+basic|batang babae|Anak ko ang batang babae.|Das Mädchen ist meine Tochter.
+basic|tao|Maraming tao rito.|Hier sind viele Leute.
+basic|ako|Pagod ako.|Ich bin müde.
+basic|ikaw / ka|Ikaw ang kaibigan ko.|Du bist mein Freund.
+basic|siya|Kapatid ko siya.|Er ist mein Bruder.
+basic|kami / tayo|Nasa bahay kami.|Wir sind zu Hause.
+basic|aso|Itim ang aso ko.|Mein Hund ist schwarz.
+basic|pusa|Natutulog ang pusa.|Die Katze schläft.
+basic|ibon|Kumakanta ang ibon.|Der Vogel singt.
+basic|puno|Napakalaki ng puno.|Der Baum ist sehr groß.
+basic|bulaklak|Maganda ang bulaklak na ito.|Diese Blume ist schön.
+basic|cellphone / telepono|Nasaan ang cellphone ko?|Wo ist mein Handy?
+basic|pangalan|Tom ang pangalan ko.|Mein Name ist Tom.
+family|nanay / ina|Nasa bahay si Nanay.|Mama ist zu Hause.
+family|tatay / ama|Maraming trabaho si Tatay.|Papa hat viel Arbeit.
+family|mga magulang|Nakatira sa Berlin ang mga magulang ko.|Meine Eltern wohnen in Berlin.
+family|kapatid na lalaki|May isa akong kapatid na lalaki.|Ich habe einen Bruder.
+family|kapatid na babae|May kapatid na babae ako.|Ich habe eine Schwester.
+family|kuya|Si Kuya ang pinakamatanda.|Der große Bruder ist der Älteste.
+family|ate|Tumutulong si Ate sa kusina.|Die große Schwester hilft in der Küche.
+family|anak na lalaki|May anak na lalaki ako.|Ich habe einen Sohn.
+family|anak na babae|May anak na babae ako.|Ich habe eine Tochter.
+family|anak|Dalawa ang anak ko.|Ich habe zwei Kinder.
+family|mga bata|Naglalaro ang mga bata.|Die Kinder spielen.
+family|asawa|Nars ang asawa ko.|Meine Frau ist Krankenschwester.
+family|lola|Walumpung taon na si Lola.|Oma ist schon achtzig.
+family|lolo|Nagkukuwento si Lolo.|Opa erzählt Geschichten.
+family|tito / tiyo|May malaking kotse si Tito.|Der Onkel hat ein großes Auto.
+family|tita / tiya|Nakatira sa Munich si Tita.|Die Tante wohnt in München.
+family|pinsan|Pinsan ko siya.|Er ist mein Cousin.
+family|kaibigan|Siya ang matalik kong kaibigan.|Er ist mein bester Freund.
+family|kapitbahay|Mabait ang kapitbahay namin.|Unser Nachbar ist nett.
+family|sanggol|Natutulog ang sanggol.|Das Baby schläft.
+family|pamilya|Malaki ang pamilya ko.|Meine Familie ist groß.
+colors|pula|Pula ang kotse.|Das Auto ist rot.
+colors|asul / bughaw|Asul ang langit.|Der Himmel ist blau.
+colors|berde / luntian|Berde ang damo.|Das Gras ist grün.
+colors|dilaw|Dilaw ang saging.|Die Banane ist gelb.
+colors|itim|Itim ang pusa ko.|Meine Katze ist schwarz.
+colors|puti|Puti ang niyebe.|Der Schnee ist weiß.
+colors|kulay-abo|Kulay-abo ang langit ngayon.|Der Himmel ist heute grau.
+colors|kayumanggi|Kayumanggi ang mga mata ko.|Ich habe braune Augen.
+colors|kahel|Kahel ang bola.|Der Ball ist orange.
+colors|rosas|Rosas ang damit niya.|Ihr Kleid ist rosa.
+colors|lila|Gusto ko ang lila.|Ich mag Lila.
+colors|madilim|Madilim na sa labas.|Draußen ist es schon dunkel.
+colors|kulay|Anong kulay ang kotse mo?|Welche Farbe hat dein Auto?
+numbers|isa|May isa akong kapatid.|Ich habe ein Geschwister.
+numbers|dalawa|May dalawa akong pusa.|Ich habe zwei Katzen.
+numbers|tatlo|Tatlo ang tiket namin.|Wir haben drei Fahrkarten.
+numbers|apat|Apat ang paa ng mesa.|Der Tisch hat vier Beine.
+numbers|lima|Limang araw akong nagtatrabaho.|Ich arbeite fünf Tage.
+numbers|anim|Anim na oras ang shift ko.|Meine Schicht dauert sechs Stunden.
+numbers|pito|Pitong araw ang isang linggo.|Eine Woche hat sieben Tage.
+numbers|walo|Walong oras akong natutulog.|Ich schlafe acht Stunden.
+numbers|siyam|Siyam na taon na ang anak ko.|Mein Kind ist schon neun.
+numbers|sampu|Sampung euro ito.|Das kostet zehn Euro.
+numbers|labing-isa|Labing-isang taon na siya.|Er ist schon elf.
+numbers|labindalawa|Labindalawang buwan ang isang taon.|Ein Jahr hat zwölf Monate.
+numbers|labintatlo|Labintatlong taon na siya.|Sie ist dreizehn.
+numbers|dalawampu|Dalawampung minuto pa.|Noch zwanzig Minuten.
+numbers|tatlumpu|Tatlumpung piso ito.|Das kostet dreißig Pesos.
+numbers|limampu|Limampung taon na ako.|Ich bin fünfzig.
+numbers|isang daan / sandaan|Isang daang piso ito.|Das kostet hundert Pesos.
+numbers|isang libo / sanlibo|Isang libong piso ang presyo.|Der Preis ist tausend Pesos.
+numbers|una|Una kong beses dito.|Ich bin zum ersten Mal hier.
+numbers|pangalawa / ikalawa|Pangalawa siya sa pila.|Er ist Zweiter in der Schlange.
+numbers|pangatlo / ikatlo|Nasa pangatlong palapag ako.|Ich bin im dritten Stock.
+numbers|kalahati|Kalahati lang ang kinain ko.|Ich habe nur die Hälfte gegessen.
+food|kanin|Kumakain kami ng kanin araw-araw.|Wir essen jeden Tag Reis.
+food|tinapay|Bumibili ako ng tinapay.|Ich kaufe Brot.
+food|keso|Masarap ang keso.|Der Käse ist lecker.
+food|itlog|Kumain ako ng itlog.|Ich habe ein Ei gegessen.
+food|karne|Hindi ako kumakain ng karne.|Ich esse kein Fleisch.
+food|isda|Gusto ko ng isda.|Ich mag Fisch.
+food|manok|Masarap ang manok.|Das Hähnchen ist lecker.
+food|patatas|Mura ang patatas.|Die Kartoffeln sind billig.
+food|gulay|Masustansya ang gulay.|Gemüse ist gesund.
+food|prutas|Kumakain ako ng prutas araw-araw.|Ich esse jeden Tag Obst.
+food|mansanas|Pula ang mansanas.|Der Apfel ist rot.
+food|saging|Matamis ang saging.|Die Banane ist süß.
+food|tubig|Isang basong tubig po.|Ein Glas Wasser, bitte.
+food|kape|Umiinom ako ng kape sa umaga.|Morgens trinke ich Kaffee.
+food|tsaa|Gusto mo ba ng tsaa?|Möchtest du Tee?
+food|gatas|Malamig ang gatas.|Die Milch ist kalt.
+food|serbesa|Isang serbesa po.|Ein Bier, bitte.
+food|almusal|Handa na ang almusal.|Das Frühstück ist fertig.
+food|tanghalian|Alas dose ang tanghalian.|Das Mittagessen ist um zwölf.
+food|hapunan|Alas siyete ang hapunan.|Das Abendessen ist um sieben.
+food|gutom|Gutom na ako.|Ich habe Hunger.
+food|uhaw|Uhaw ka ba?|Hast du Durst?
+food|masarap|Masarap ang pagkain.|Das Essen ist lecker.
+greet|kumusta|Kumusta, Maria?|Hallo Maria, wie geht's?
+greet|magandang umaga|Magandang umaga po!|Guten Morgen!
+greet|magandang hapon|Magandang hapon po, Lola!|Guten Tag, Oma!
+greet|magandang gabi|Magandang gabi sa inyong lahat!|Guten Abend euch allen!
+greet|paalam|Paalam, kita tayo bukas!|Auf Wiedersehen, bis morgen!
+greet|salamat|Salamat sa tulong mo.|Danke für deine Hilfe.
+greet|maraming salamat|Maraming salamat po!|Vielen Dank!
+greet|walang anuman|"Salamat!" – "Walang anuman."|„Danke!“ – „Gern geschehen.“
+greet|pakiusap|Pakiusap, tulungan mo ako.|Bitte hilf mir.
+greet|pasensya na|Pasensya na, huli ako.|Entschuldigung, ich bin spät dran.
+greet|oo|Oo, naiintindihan ko.|Ja, ich verstehe.
+greet|opo|Opo, kumain na po ako.|Ja, ich habe schon gegessen.
+greet|hindi|Hindi, salamat.|Nein, danke.
+greet|ingat ka|Ingat ka sa biyahe!|Pass unterwegs auf dich auf!
+home|bahay|Luma na ang bahay namin.|Unser Haus ist schon alt.
+home|apartment|Maliit ang apartment ko.|Meine Wohnung ist klein.
+home|kuwarto|Malaki ang kuwartong ito.|Dieses Zimmer ist groß.
+home|kusina|Nasa kusina si Nanay.|Mama ist in der Küche.
+home|banyo / CR|Nasaan ang banyo?|Wo ist das Badezimmer?
+home|silid-tulugan|Tahimik ang silid-tulugan.|Das Schlafzimmer ist ruhig.
+home|sala|Nanonood kami ng TV sa sala.|Wir sehen im Wohnzimmer fern.
+home|bakuran / hardin|Naglalaro ang mga bata sa bakuran.|Die Kinder spielen im Garten.
+home|pinto|Pakisara ang pinto.|Bitte schließ die Tür.
+home|bintana|Pakibukas ang bintana.|Bitte mach das Fenster auf.
+home|mesa|Nasa mesa ang susi.|Der Schlüssel liegt auf dem Tisch.
+home|upuan|Umupo ka sa upuan.|Setz dich auf den Stuhl.
+home|kama|Malambot ang kama.|Das Bett ist weich.
+home|susi|Hindi ko mahanap ang susi ko.|Ich finde meinen Schlüssel nicht.
+home|hagdan|Mataas ang hagdan.|Die Treppe ist hoch.
+home|dingding / pader|Puti ang dingding.|Die Wand ist weiß.
+home|bubong|Pula ang bubong.|Das Dach ist rot.
+home|aparador|Nasa aparador ang mga damit.|Die Kleider sind im Schrank.
+home|ilaw|Pakibukas ang ilaw.|Bitte mach das Licht an.
+clothes|damit|Bago ang damit ko.|Meine Kleidung ist neu.
+clothes|bestida|Pula ang bestida niya.|Ihr Kleid ist rot.
+clothes|polo|Kailangan ko ng bagong polo.|Ich brauche ein neues Hemd.
+clothes|kamiseta / T-shirt|Malaki ang kamisetang ito.|Dieses T-Shirt ist groß.
+clothes|pantalon|Asul ang pantalon ko.|Meine Hose ist blau.
+clothes|palda|Maikli ang palda.|Der Rock ist kurz.
+clothes|dyaket|Magdala ka ng dyaket.|Nimm eine Jacke mit.
+clothes|sapatos|Kailangan ko ng bagong sapatos.|Ich brauche neue Schuhe.
+clothes|tsinelas|Nasaan ang tsinelas ko?|Wo sind meine Badelatschen?
+clothes|medyas|Basa ang medyas ko.|Meine Socken sind nass.
+clothes|sumbrero|May sumbrero siya.|Er hat einen Hut.
+clothes|guwantes|Nasaan ang guwantes ko?|Wo sind meine Handschuhe?
+clothes|bupanda|Mainit ang bupanda.|Der Schal ist warm.
+clothes|sukat|Ano ang sukat mo?|Welche Größe hast du?
+clothes|magsuot|Magsuot ka ng dyaket.|Zieh eine Jacke an.
+body|ulo|Masakit ang ulo ko.|Mein Kopf tut weh.
+body|mata|Kayumanggi ang mata niya.|Er hat braune Augen.
+body|tainga / tenga|Masakit ang tainga ko.|Mein Ohr tut weh.
+body|ilong|Malamig ang ilong ko.|Meine Nase ist kalt.
+body|bibig|Buksan mo ang bibig mo.|Mach den Mund auf.
+body|kamay|Maghugas ka ng kamay.|Wasch dir die Hände.
+body|braso|Masakit ang braso ko.|Mein Arm tut weh.
+body|binti|Mahaba ang binti niya.|Sie hat lange Beine.
+body|paa|Masakit ang paa ko.|Mein Fuß tut weh.
+body|likod|Masakit ang likod ko.|Mein Rücken tut weh.
+body|tiyan|Masakit ang tiyan ko.|Mein Bauch tut weh.
+body|ngipin|Masakit ang ngipin ko.|Mein Zahn tut weh.
+body|doktor|Kailangan ko ng doktor.|Ich brauche einen Arzt.
+body|ospital|Nasa ospital siya.|Er ist im Krankenhaus.
+body|gamot|Inumin mo ang gamot.|Nimm das Medikament.
+body|may sakit|May sakit ako ngayon.|Ich bin heute krank.
+body|masakit|Masakit ba?|Tut es weh?
+body|sakit ng ulo|May sakit ng ulo ako.|Ich habe Kopfschmerzen.
+body|sipon|May sipon ako.|Ich habe Schnupfen.
+body|malusog|Malusog ang bata.|Das Kind ist gesund.
+days|Lunes|Lunes ngayon.|Heute ist Montag.
+days|Martes|May trabaho ako sa Martes.|Am Dienstag arbeite ich.
+days|Miyerkules|Kita tayo sa Miyerkules.|Bis Mittwoch.
+days|Huwebes|Day off ko sa Huwebes.|Am Donnerstag habe ich frei.
+days|Biyernes|Gusto ko ang Biyernes.|Ich mag den Freitag.
+days|Sabado|Mamimili kami sa Sabado.|Am Samstag gehen wir einkaufen.
+days|Linggo|Nagsisimba kami tuwing Linggo.|Sonntags gehen wir in die Kirche.
+days|Enero|Malamig sa Enero.|Im Januar ist es kühl.
+days|Pebrero|Maikli ang Pebrero.|Der Februar ist kurz.
+days|Marso|Mainit na sa Marso.|Im März ist es schon heiß.
+days|Abril|Kaarawan ko sa Abril.|Im April habe ich Geburtstag.
+days|Mayo|Maraming pista sa Mayo.|Im Mai gibt es viele Feste.
+days|Hunyo|Nagsisimula ang klase sa Hunyo.|Im Juni beginnt die Schule.
+days|Hulyo|Maulan sa Hulyo.|Im Juli regnet es viel.
+days|Agosto|Bakasyon ko sa Agosto.|Im August habe ich Urlaub.
+days|Setyembre|Babalik ako sa Setyembre.|Ich komme im September zurück.
+days|Oktubre|Kaarawan ni Nanay sa Oktubre.|Mama hat im Oktober Geburtstag.
+days|Nobyembre|Uuwi kami sa Nobyembre.|Im November fahren wir nach Hause.
+days|Disyembre|Sa Disyembre ang Pasko.|Weihnachten ist im Dezember.
+weather|panahon|Maganda ang panahon ngayon.|Das Wetter ist heute schön.
+weather|araw|Mainit ang araw.|Die Sonne ist heiß.
+weather|ulan|Malakas ang ulan.|Der Regen ist stark.
+weather|niyebe|Walang niyebe sa Pilipinas.|Auf den Philippinen gibt es keinen Schnee.
+weather|hangin|Malakas ang hangin.|Der Wind ist stark.
+weather|ulap|Maraming ulap ngayon.|Heute gibt es viele Wolken.
+weather|bagyo|May paparating na bagyo.|Ein Taifun kommt.
+weather|mainit|Mainit ngayon.|Heute ist es heiß.
+weather|malamig|Malamig sa labas.|Draußen ist es kalt.
+weather|maaraw|Maaraw bukas.|Morgen ist es sonnig.
+weather|maulan|Maulan ngayong linggo.|Diese Woche ist es regnerisch.
+weather|maalinsangan|Maalinsangan ngayong gabi.|Heute Abend ist es schwül.
+weather|tag-init / tag-araw|Pumupunta kami sa beach tuwing tag-init.|Im Sommer fahren wir an den Strand.
+weather|tag-ulan|Mahaba ang tag-ulan.|Die Regenzeit ist lang.
+weather|taglamig|Malamig sa Alemanya tuwing taglamig.|Im Winter ist es in Deutschland kalt.
+adj|malaki|Malaki ang bahay nila.|Ihr Haus ist groß.
+adj|maliit|Maliit ang kuwarto.|Das Zimmer ist klein.
+adj|matanda|Matanda na si Lolo.|Opa ist schon alt.
+adj|luma|Luma na ang kotse ko.|Mein Auto ist schon alt.
+adj|bago|Bago ang cellphone ko.|Mein Handy ist neu.
+adj|bata|Bata pa siya.|Sie ist noch jung.
+adj|mabuti|Mabuti naman ako.|Mir geht es gut.
+adj|masama|Masama ang panahon.|Das Wetter ist schlecht.
+adj|maganda|Maganda ang bulaklak.|Die Blume ist schön.
+adj|mabilis|Mabilis ang tren.|Der Zug ist schnell.
+adj|mabagal|Mabagal ang bus.|Der Bus ist langsam.
+adj|madali|Madali ang Tagalog.|Tagalog ist leicht.
+adj|mahirap|Mahirap ito.|Das ist schwierig.
+adj|masaya|Masaya ako ngayon.|Ich bin heute glücklich.
+adj|malungkot|Bakit ka malungkot?|Warum bist du traurig?
+adj|pagod|Pagod ako pagkatapos ng trabaho.|Nach der Arbeit bin ich müde.
+adj|tama|Tama iyan.|Das ist richtig.
+adj|mali|Mali iyan.|Das ist falsch.
+adj|mahalaga|Mahalaga ito.|Das ist wichtig.
+adj|mahaba|Mahaba ang araw na ito.|Dieser Tag ist lang.
+adj|maikli|Maikli ang pelikula.|Der Film ist kurz.
+adj|mabait|Mabait ang kapitbahay ko.|Mein Nachbar ist nett.
+time|ngayon|Day off ko ngayon.|Heute habe ich frei.
+time|bukas|Kita tayo bukas.|Bis morgen.
+time|kahapon|Nagtrabaho ako kahapon.|Gestern habe ich gearbeitet.
+time|mamaya|Tatawagan kita mamaya.|Ich rufe dich später an.
+time|maaga|Maaga akong gumigising.|Ich stehe früh auf.
+time|huli|Huli na ako.|Ich bin spät dran.
+time|umaga|Malamig sa umaga.|Am Morgen ist es kühl.
+time|hapon|Natutulog ako sa hapon.|Am Nachmittag schlafe ich.
+time|gabi|Nagtatrabaho ako sa gabi.|Ich arbeite nachts.
+time|oras|Isang oras ang pelikula.|Der Film dauert eine Stunde.
+time|minuto|Sandali, limang minuto lang.|Moment, nur fünf Minuten.
+time|araw|Magandang araw!|Einen schönen Tag!
+time|linggo|Nagtatrabaho ako ngayong linggo.|Diese Woche arbeite ich.
+time|buwan|Bakasyon ko sa susunod na buwan.|Nächsten Monat habe ich Urlaub.
+time|taon|Pupunta kami sa Manila ngayong taon.|Dieses Jahr fahren wir nach Manila.
+time|lagi / palagi|Lagi akong umiinom ng tsaa.|Ich trinke immer Tee.
+time|madalas|Madalas kaming kumakain ng isda.|Wir essen oft Fisch.
+time|minsan|Minsan nagtatrabaho ako sa gabi.|Manchmal arbeite ich nachts.
+time|hindi kailanman|Hindi kailanman siya nahuhuli.|Er kommt nie zu spät.
+verbs|pumunta|Gusto kong pumunta sa Manila.|Ich will nach Manila fahren.
+verbs|dumating|Dumating na ang bus.|Der Bus ist angekommen.
+verbs|makita|Gusto kitang makita.|Ich will dich sehen.
+verbs|gumawa|Gumawa ako ng kape.|Ich habe Kaffee gemacht.
+verbs|sabihin|Ano ang gusto mong sabihin?|Was willst du sagen?
+verbs|malaman|Gusto kong malaman.|Ich will es wissen.
+verbs|kumuha|Kumuha ka ng tubig.|Hol dir Wasser.
+verbs|magbigay|Gusto kong magbigay ng regalo.|Ich will ein Geschenk geben.
+verbs|hanapin|Hanapin mo ang susi.|Such den Schlüssel.
+verbs|mag-isip|Kailangan kong mag-isip.|Ich muss nachdenken.
+verbs|gusto|Gusto ko ng kape.|Ich möchte Kaffee.
+verbs|kailangan|Kailangan ko ng tulong.|Ich brauche Hilfe.
+verbs|kumain|Gusto kong kumain.|Ich will essen.
+verbs|uminom|Gusto kong uminom ng tubig.|Ich will Wasser trinken.
+verbs|matulog|Kailangan kong matulog.|Ich muss schlafen.
+verbs|tumulong|Gusto kong tumulong.|Ich will helfen.
+verbs|mag-aral|Gusto kong mag-aral ng Tagalog.|Ich will Tagalog lernen.
+verbs|maintindihan|Hindi ko maintindihan.|Ich verstehe es nicht.
+verbs|magtrabaho|Kailangan kong magtrabaho bukas.|Ich muss morgen arbeiten.
+verbs|magsalita|Marunong ka bang magsalita ng Tagalog?|Kannst du Tagalog sprechen?
+verbs|maglakad|Gusto kong maglakad.|Ich will zu Fuß gehen.
+shop|tindahan|Sarado ang tindahan.|Der Laden ist geschlossen.
+shop|palengke|Pupunta ako sa palengke.|Ich gehe zum Markt.
+shop|panaderya|Bukas na ang panaderya.|Die Bäckerei hat schon offen.
+shop|botika|Nasaan ang botika?|Wo ist die Apotheke?
+shop|pera|Wala akong pera.|Ich habe kein Geld.
+shop|presyo|Mura ang presyo.|Der Preis ist günstig.
+shop|magkano|Magkano ang isda?|Wie viel kostet der Fisch?
+shop|mura|Mura ang prutas dito.|Obst ist hier billig.
+shop|mahal|Masyadong mahal iyan.|Das ist zu teuer.
+shop|bumili|Gusto kong bumili ng tinapay.|Ich will Brot kaufen.
+shop|magbayad|Gusto kong magbayad.|Ich möchte bezahlen.
+shop|resibo|Ito ang resibo mo.|Hier ist deine Quittung.
+shop|supot|Kailangan mo ba ng supot?|Brauchst du eine Tüte?
+shop|bukas|Bukas ba ang tindahan?|Ist der Laden offen?
+shop|sarado|Sarado ang bangko.|Die Bank ist geschlossen.
+shop|sukli|Ito ang sukli mo.|Hier ist dein Wechselgeld.
+shop|tawad|May tawad ba?|Gibt es Rabatt?
+travel|kotse|Pula ang kotse ko.|Mein Auto ist rot.
+travel|bus|Huli ang bus.|Der Bus hat Verspätung.
+travel|tren|Sumasakay ako ng tren.|Ich fahre mit dem Zug.
+travel|eroplano|Puno ang eroplano.|Das Flugzeug ist voll.
+travel|bisikleta|Bago ang bisikleta ko.|Mein Fahrrad ist neu.
+travel|jeepney / dyip|Sumakay kami ng jeepney.|Wir sind mit dem Jeepney gefahren.
+travel|istasyon|Nasaan ang istasyon?|Wo ist der Bahnhof?
+travel|paliparan|Pupunta kami sa paliparan.|Wir fahren zum Flughafen.
+travel|tiket|Kailangan ko ng tiket.|Ich brauche eine Fahrkarte.
+travel|kalye / daan|Mahaba ang kalye.|Die Straße ist lang.
+travel|kaliwa|Nasa kaliwa ang banyo.|Die Toilette ist links.
+travel|kanan|Nasa kanan ang istasyon.|Der Bahnhof ist rechts.
+travel|diretso|Diretso lang po.|Einfach geradeaus.
+travel|mapa|May mapa ka ba?|Hast du einen Stadtplan?
+travel|maleta|Mabigat ang maleta ko.|Mein Koffer ist schwer.
+travel|pasaporte|Ito ang pasaporte ko.|Hier ist mein Reisepass.
+travel|magbiyahe|Mahilig akong magbiyahe.|Ich reise gern.
+travel|magmaneho|Marunong akong magmaneho.|Ich kann Auto fahren.
+travel|trapik|Grabe ang trapik!|Der Verkehr ist schlimm!
+free|libreng oras|Ano ang ginagawa mo sa libreng oras mo?|Was machst du in deiner Freizeit?
+free|libangan|Pagluluto ang libangan ko.|Kochen ist mein Hobby.
+free|musika|Gusto ko ang musikang ito.|Ich mag diese Musik.
+free|pelikula|Maganda ang pelikula.|Der Film ist gut.
+free|libro / aklat|Nagbabasa ako ng libro.|Ich lese ein Buch.
+free|laro|Masaya ang laro.|Das Spiel macht Spaß.
+free|basketbol|Naglalaro ng basketbol ang anak ko.|Mein Sohn spielt Basketball.
+free|handaan|May handaan sa Sabado.|Am Samstag ist eine Feier.
+free|sinehan|Pumunta tayo sa sinehan.|Lass uns ins Kino gehen.
+free|lumangoy|Gusto kong lumangoy.|Ich will schwimmen.
+free|magbasa|Mahilig akong magbasa.|Ich lese gern.
+free|magluto|Mahilig magluto ang asawa ko.|Meine Frau kocht gern.
+free|sumayaw|Sumayaw tayo!|Lass uns tanzen!
+free|kumanta|Magaling siyang kumanta.|Sie singt sehr gut.
+free|maglaro|Gustong maglaro ng mga bata.|Die Kinder wollen spielen.
+free|mamasyal|Mamasyal tayo sa parke.|Lass uns im Park spazieren gehen.
+free|manood ng TV|Mahilig akong manood ng TV.|Ich sehe gern fern.
+free|makinig ng musika|Gusto kong makinig ng musika.|Ich will Musik hören.
+work|trabaho|Gusto ko ang trabaho ko.|Ich mag meine Arbeit.
+work|katrabaho|Mabait ang katrabaho ko.|Mein Kollege ist nett.
+work|amo|Nasa opisina ang amo.|Der Chef ist im Büro.
+work|shift|Alas dos ang simula ng shift ko.|Meine Schicht beginnt um zwei.
+work|shift sa umaga|Shift sa umaga ako ngayong linggo.|Diese Woche habe ich Frühschicht.
+work|shift sa hapon|Natatapos ang shift sa hapon nang alas diyes.|Die Spätschicht endet um zehn.
+work|shift sa gabi / graveyard shift|Pagod ako pagkatapos ng shift sa gabi.|Nach der Nachtschicht bin ich müde.
+work|overtime|Nag-overtime ako kahapon.|Ich habe gestern Überstunden gemacht.
+work|bakasyon|Bakasyon ko sa susunod na linggo.|Nächste Woche habe ich Urlaub.
+work|day off|Day off ko bukas.|Morgen habe ich frei.
+work|pabrika|Nagtatrabaho ako sa pabrika.|Ich arbeite in einer Fabrik.
+work|opisina|Nasa ikalawang palapag ang opisina.|Das Büro ist im zweiten Stock.
+work|pahinga|Kailangan ko ng pahinga.|Ich brauche eine Pause.
+work|sahod / suweldo|Maganda ang sahod dito.|Der Lohn ist hier gut.
+work|pulong|Alas nuwebe ang pulong.|Die Besprechung ist um neun.
+work|magsimula|Kailangan nating magsimula.|Wir müssen anfangen.
+work|matapos|Gusto ko nang matapos.|Ich will endlich fertig werden.`;
 const RAW = LANG === "tl" ? RAW_TL : RAW_EN;
 const GCAT = LANG === "tl" ? GCAT_TL : GCAT_EN;
 const GRAM_RAW = LANG === "tl" ? GRAM_RAW_TL : GRAM_RAW_EN;
@@ -1327,6 +1994,26 @@ const TOPICS = RAW.slice().sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[
   sents: lines(s).map(([en, de]) => ({ key: "s:" + id + ":" + en, en, de, topic: id, kind: "s" }))
 }));
 const TOPIC = Object.fromEntries(TOPICS.map(t => [t.id, t]));
+// Beispielsatz an jedes Wort hängen (als Satz-Aufgabe nutzbar, eigener Lern-Schlüssel „x:…“)
+{
+  const ex = {};
+  for (const [tp, en, s2, de] of lines(LANG === "tl" ? EX_RAW_TL : EX_RAW_EN)) ex[tp + "|" + en] = [s2, de];
+  for (const t of TOPICS) for (const w of t.words) {
+    const e = ex[t.id + "|" + w.en];
+    if (e) w.ex = { key: "x:" + t.id + ":" + w.en, en: e[0], de: e[1], topic: t.id, kind: "s", word: w };
+  }
+}
+const exWords = list => list.filter(w => w.ex);
+// das gelernte Wort im Satz gelb markieren
+function hlWord(sentence, w) {
+  const forms = w.en.split(" / ").map(x => (LANG === "en" ? x.replace(/^(to|the|a|an) /i, "") : x).trim()).filter(Boolean);
+  const low = sentence.toLowerCase();
+  for (const f of forms) {
+    const i = low.indexOf(f.toLowerCase());
+    if (i >= 0) return esc(sentence.slice(0, i)) + '<mark class="hl">' + esc(sentence.slice(i, i + f.length)) + "</mark>" + esc(sentence.slice(i + f.length));
+  }
+  return esc(sentence);
+}
 const WORDS = TOPICS.flatMap(t => t.words);
 const SENTS = TOPICS.flatMap(t => t.sents);
 const GRAM = lines(GRAM_RAW).map(([cat, q, a, w, de], i) => ({ key: "g:" + i, cat, q, a, wrong: w.split(","), de }));
@@ -1786,7 +2473,7 @@ function wordTask(w, opts = {}) {
   else kind = pick(DICT && Math.random() < 0.2 ? ["speak"] : ["type", "listen", "type"]);
   return { kind, item: w, isNew: b < 0 && opts.force !== "mcDE" && !opts.follow };
 }
-function sentTask(s, force) { const b = box(s.key); return { kind: force || (b >= 2 ? "buildL" : "build"), item: s, isNew: b < 0 }; }
+function sentTask(s, force) { const b = box(s.key); return { kind: force || (b >= 2 ? "buildL" : "build"), item: s, isNew: b < 0, exWord: s.word || null }; }
 function gramTask(g) { return { kind: "gram", item: g }; }
 const dueOf = list => { const t = TODAY(); return list.filter(x => S.srs[x.key] && S.srs[x.key][1] <= t).sort((a, b) => box(a.key) - box(b.key)); };
 const seenOf = list => list.filter(x => S.srs[x.key]);
@@ -1807,7 +2494,7 @@ function poolWords(n) {
 }
 
 function buildSession(type, arg) {
-  let tasks = [], title = "";
+  let tasks = [], title = "", freshWords = [];
   if (type === "daily") {
     title = "Tägliche Runde";
     // Anfang leicht: wenige neue Wörter, Sätze ab 10 und Grammatik ab 25 sicheren Wörtern
@@ -1821,7 +2508,8 @@ function buildSession(type, arg) {
     const short = s => s.en.split(" ").length;
     const sents = ln < 10 ? [] : [...dueOf(SENTS), ...SENTS.filter(s => !S.srs[s.key] && knownTopic(s)).sort((a, b) => short(a) - short(b))].filter((s, i, a) => a.indexOf(s) === i).slice(0, ln < 30 ? 1 : 2);
     const grams = ln < 25 ? [] : weakGram(ln < 60 ? 1 : 2);
-    tasks = [...fresh.map(w => wordTask(w)), ...shuffle([...due, ...extra].map(w => wordTask(w)).concat(fresh.map(w => wordTask(w, { force: picOn() && w.pic ? "pic" : "mcDE", follow: true })), sents.map(s => sentTask(s)), grams.map(gramTask)))];
+    tasks = [...fresh.map(w => wordTask(w)), ...shuffle([...due, ...extra].map(w => wordTask(w)).concat(fresh.map(w => wordTask(w, { force: picOn() && w.pic ? "pic" : "mcDE", follow: true })), sents.map(s => sentTask(s)), grams.map(gramTask))), ...exWords(fresh).map(w => sentTask(w.ex, "build"))];
+    freshWords = fresh;
   } else if (type === "topic") {
     const t = TOPIC[arg]; title = t.name;
     const due = dueOf(t.words), fresh = unseenOf(t.words), rest = shuffle(seenOf(t.words).filter(w => !due.includes(w)));
@@ -1829,7 +2517,8 @@ function buildSession(type, arg) {
     for (const w of fresh) if (ws.length < 7) ws.push(w);
     for (const w of rest) if (ws.length < 8) ws.push(w);
     const newOnes = ws.filter(w => !S.srs[w.key]), old = ws.filter(w => S.srs[w.key]);
-    tasks = [...newOnes.map(w => wordTask(w)), ...shuffle(old.map(w => wordTask(w)).concat(newOnes.map(w => wordTask(w, { force: "mcDE" })), (t.words.filter(w => S.srs[w.key]).length >= t.words.length / 2 ? shuffle(t.sents).slice(0, 2) : []).map(s => sentTask(s))))];
+    tasks = [...newOnes.map(w => wordTask(w)), ...shuffle(old.map(w => wordTask(w)).concat(newOnes.map(w => wordTask(w, { force: "mcDE" })), (t.words.filter(w => S.srs[w.key]).length >= t.words.length / 2 ? shuffle(t.sents).slice(0, 2) : []).map(s => sentTask(s))))].concat(exWords(newOnes).map(w => sentTask(w.ex, "build")));
+    freshWords = newOnes;
   } else if (type === "listen") {
     title = "Hören";
     tasks = shuffle(poolWords(7).map(w => wordTask(w, { force: "listen" })).concat(shuffle(SENTS.filter(s => S.srs[s.key])).concat(shuffle(SENTS)).filter((s, i, a) => a.indexOf(s) === i).slice(0, 3).map(s => sentTask(s, "buildL"))));
@@ -1863,7 +2552,7 @@ function buildSession(type, arg) {
   } else if (type === "redo") {
     title = "Fehler wiederholen"; tasks = arg.map(t => Object.assign({}, t, { requeued: false }));
   }
-  return { type, title, tasks, i: 0, right: 0, graded: 0, xp: 0, newlyLearned: 0, mistakes: [], startAch: Object.keys(S.ach).length, answered: false };
+  return { type, title, tasks, freshWords, i: 0, right: 0, graded: 0, xp: 0, newlyLearned: 0, mistakes: [], startAch: Object.keys(S.ach).length, answered: false };
 }
 
 function startSession(type, arg) {
@@ -1937,7 +2626,7 @@ function renderTask() {
     t.line = [];
     const prompt = t.kind === "build" ? `<div class="prompt"><div class="txt de" style="font-size:22px">${esc(it.de)}</div></div>`
       : `<div class="play"><button class="p1" data-say="${esc(it.en)}" aria-label="Abspielen">${ICON.spk}</button><button class="p2" data-say="${esc(it.en)}" data-slow>langsam</button></div><button class="linkish" data-act="showde" style="justify-self:center">Deutsche Übersetzung zeigen</button><div class="hint" id="deTxt" style="text-align:center"></div>`;
-    body = `${t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf " + LN : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>
+    body = `${t.exWord ? `<span class="newtag">Satz mit deinem neuen Wort: ${picOn() && t.exWord.pic ? t.exWord.pic + " " : ""}${esc(t.exWord.en.split(" / ")[0])}</span>` : t.requeued ? newTag : ""}<div class="t-label">${t.kind === "build" ? "Bau den Satz auf " + LN : "Hör zu und bau den Satz"}</div>${prompt}<div class="build-line" id="line"></div><div class="bank" id="bank">${t.bank.map((b, j) => `<button class="tok" data-tok="${j}">${esc(b.w)}</button>`).join("")}</div>
       ${DICT ? `<div class="speak-alt"><button class="mic sm" id="buildMic" data-act="buildmic" aria-label="Satz sprechen">${ICON.mic}</button><div><b>Oder sprich den ganzen Satz</b><div class="hint" id="buildHint">Aufs Mikrofon tippen und auf ${LN} sprechen.</div><div id="buildHeard" style="font-weight:700;color:var(--blue)"></div></div></div>` : ""}`;
     foot = `<button class="go" data-act="check" disabled id="chk">Prüfen</button>`;
   } else if (t.kind === "gram") {
@@ -1979,7 +2668,7 @@ function feedback(ok, opts = {}) {
     lines += `<div class="fb-line"><div class="t">${ok ? "" : "Richtig ist: "}<b>${esc(en)}</b><br><span class="muted">${esc(it.de)}</span></div>${spk(en, "sm")}</div>`;
   } else {
     // immer beides: Wort (mit Bild) und deutsche Bedeutung
-    const mean = `${picHtml(it, "pic-s")}<b>${esc(it.en)}</b> = ${esc(it.de)}`;
+    const mean = `${picHtml(it, "pic-s")}<b>${t.exWord ? hlWord(it.en, t.exWord) : esc(it.en)}</b> = ${esc(it.de)}`;
     const pre = opts.almost ? "Achte auf die Schreibweise:<br>" : ok ? "" : "Richtig ist:<br>";
     lines += `<div class="fb-line"><div class="t">${pre}${mean}</div>${spk(it.en, "sm")}</div>`;
     if (!ok && opts.chosen) {
@@ -2022,6 +2711,7 @@ function finishSession() {
     <div class="grade"><div class="note" aria-label="Note ${n}">${n}</div><div><div class="label">${esc(SES.title)}</div><h1>${word}</h1><p class="muted" style="margin:4px 0 0">${SES.right} von ${SES.graded} beim ersten Versuch richtig</p></div></div>
     <div class="tiles"><div class="tile"><b>+${SES.xp}</b><span>XP</span></div><div class="tile"><b>${SES.newlyLearned}</b><span>Wörter neu sicher</span></div><div class="tile"><b>${streak()}</b><span>Tage in Folge</span></div></div>
     ${got.length ? `<section class="card"><div class="label">Neue Stempel</div><div class="stamps" style="margin-top:12px">${got.map(id => { const a = ACH.find(x => x[0] === id); return `<div class="stamp got"><div class="s">${esc(a[1])}</div><small>${esc(a[2])}</small></div>`; }).join("")}</div></section>` : ""}
+    ${exWords(SES.freshWords || []).length ? `<section><div class="label" style="margin-bottom:8px">Deine neuen Wörter im Satz</div><div class="mist">${exWords(SES.freshWords).map(w => `<div class="m"><div><span class="muted">${picHtml(w, "pic-s")}${esc(w.en)} = ${esc(w.de)}</span><br><b>${hlWord(w.ex.en, w)}</b><br><span class="muted">${esc(w.ex.de)}</span></div>${spk(w.ex.en, "sm")}</div>`).join("")}</div></section>` : ""}
     ${uniq.length ? `<section><div class="label" style="margin-bottom:8px">Das übst du nochmal</div><div class="mist">${uniq.map(m => { const en = m.kind === "gram" ? m.item.q.replace("___", m.item.a) : m.item.en; return `<div class="m"><div><b>${esc(en)}</b><br><span class="muted">${esc(m.item.de)}</span></div>${spk(en, "sm")}</div>`; }).join("")}</div></section>` : ""}
   </div></div>
   <div class="s-foot"><div class="wrap">${uniq.length ? `<div class="two"><button class="go ghost" data-act="redo">Fehler üben</button><button class="go" data-act="close-ses">Fertig</button></div>` : `<button class="go" data-act="close-ses">Fertig</button>`}</div></div>`;
