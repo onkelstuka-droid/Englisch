@@ -280,7 +280,7 @@ mark.hl{background:var(--marker);color:var(--on-marker);border-radius:3px;paddin
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.7.1";
+const APP_VERSION = "1.7.2";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -2145,14 +2145,10 @@ function speakDevice(text, slow) {
   } catch (e) { return false; }
 }
 /* Aussprache-Test: mehrere Texte nacheinander vorlesen, ohne Vorbereitung */
-const PTEST = [
-  ["bulaklak", "pangalan", "kapitbahay"],
-  ["bu-lak-lak", "pa-nga-lan", "ka-pit-ba-hay"],
-  ["Bulaklak.", "Pangalan.", "Kapitbahay."],
-  ["bulaklak.", "pangalan.", "kapitbahay."],
-  ["bu lak lak", "pa nga lan", "ka pit ba hay"],
-  ["Ito ay bulaklak.", "Ito ang pangalan ko.", "Ito ang kapitbahay ko."]
-];
+const PTEST = {
+  a: [["bulaklak", "kapitbahay"], ["bu-lak-lak", "ka-pit-ba-hay"], ["bulaklák", "kapitbáhay"]],
+  b: [["pangalan"], ["pangálan"], ["pa-ngá-lan"], ["pa-ngalan"], ["pa ngalan"], ["pangngalan"]]
+};
 function speakSeq(list) {
   if (!deviceOK()) return;
   try {
@@ -2449,10 +2445,13 @@ function settingsHtml() {
     <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : LANG === "tl" ? "Keine Tagalog-Stimme gefunden. Am Handy: Einstellungen → System → Sprachen → Sprachausgabe → Zahnrad bei Google → Sprachdaten installieren → Filipino." : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
     ${langVoices().length > 1 ? `<select id="voiceSel" style="font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)">${langVoices().map(v => `<option value="${esc(v.name)}" ${devVoice && v.name === devVoice.name ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select>` : ""}
     <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button>
-    ${LANG === "tl" ? `<div class="card" style="display:grid;gap:10px;margin-top:6px;border:2px solid var(--marker)">
-      <b>Aussprache-Test: bulaklak · pangalan · kapitbahay</b>
-      <span class="hint">Jeder Knopf spricht drei längere Wörter: bulaklak (Blume), pangalan (Name), kapitbahay (Nachbar). Bei welcher Nummer klingen <b>alle drei richtig</b>?</span>
-      <div class="seg">${PTEST.map((v, i) => `<button data-ptest="${i}">${i + 1}</button>`).join("")}</div>
+    ${LANG === "tl" ? `<div class="card" style="display:grid;gap:12px;margin-top:6px;border:2px solid var(--marker)">
+      <b>Aussprache-Test A: bulaklak · kapitbahay</b>
+      <span class="hint">Bei welcher Nummer klingen beide Wörter richtig?</span>
+      <div class="seg">${PTEST.a.map((v, i) => `<button data-ptest="a${i}">${i + 1}</button>`).join("")}</div>
+      <b>Aussprache-Test B: pangalan (Name)</b>
+      <span class="hint">Richtig ist pa-<b>nga</b>-lan: „ng“ wie in „Engel“, Betonung auf der Mitte. Welche Nummer kommt am nächsten?</span>
+      <div class="seg">${PTEST.b.map((v, i) => `<button data-ptest="b${i}">${i + 1}</button>`).join("")}</div>
     </div>` : ""}</div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
@@ -2975,7 +2974,7 @@ document.addEventListener("click", e => {
   const gc = e.target.closest("[data-gcat]");
   if (gc) return startSession("gram", gc.dataset.gcat);
   const pt = e.target.closest("[data-ptest]");
-  if (pt) { speakSeq(PTEST[+pt.dataset.ptest]); return; }
+  if (pt) { const k = pt.dataset.ptest; speakSeq(PTEST[k[0]][+k.slice(1)]); return; }
   const dl = e.target.closest("[data-del]");
   if (dl) { S.saved = S.saved.filter(x => x.id !== dl.dataset.del); saveLocal(); push(); render(); toast("Gelöscht."); return; }
   const lg = e.target.closest("[data-lang]");
