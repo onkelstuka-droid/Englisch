@@ -52,7 +52,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 /* tab bar */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--sheet);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabs .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr)}
 .tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 10px;font-size:13px;color:var(--soft)}
 .tabs button[aria-current="page"]{color:var(--blue);font-weight:700}
 
@@ -254,6 +254,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
   <button data-tab="home"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Heute</button>
   <button data-tab="practice"><svg class="i" viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg>Üben</button>
   <button data-tab="words"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h13v16H6a1 1 0 0 1-1-1z"/><path d="M9 4v16"/></svg>Wörter</button>
+  <button data-tab="trans"><svg class="i" viewBox="0 0 24 24"><path d="M4 5h9v7H8l-3 3v-3H4z"/><path d="M11 12v2h5l3 3v-3h1V7h-5"/></svg>Übersetzen</button>
   <button data-tab="stats"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Erfolge</button>
 </div></nav>
 
@@ -263,7 +264,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.4.7";
+const APP_VERSION = "1.5";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1326,12 +1327,13 @@ const GRAM = lines(GRAM_RAW).map(([cat, q, a, w, de], i) => ({ key: "g:" + i, ca
 
 /* ======================= STATE ======================= */
 const LS = LANGS[LANG].store;
-const blank = () => ({ v: 1, t: 0, xp: 0, days: {}, srs: {}, gram: {}, ach: {}, c: {},
+const blank = () => ({ v: 1, t: 0, xp: 0, days: {}, srs: {}, gram: {}, ach: {}, c: {}, saved: [],
   set: { accent: "en-GB", voice: "auto", rate: 1, auto: true, sfx: true, pics: true, goal: 50, cardDir: "de" } });
 function fix(o) {
   const b = blank(), s = Object.assign(b, o || {});
   s.set = Object.assign(blank().set, (o && o.set) || {});
   for (const k of ["days", "srs", "gram", "ach", "c"]) if (!s[k] || typeof s[k] !== "object" || Array.isArray(s[k])) s[k] = {};
+  if (!Array.isArray(s.saved)) s.saved = [];
   return s;
 }
 function load() { try { const r = localStorage.getItem(LS); if (r) return fix(JSON.parse(r)); } catch (e) {} return blank(); }
@@ -1366,6 +1368,7 @@ function merge(a, b) {
   for (const k in b.gram) { const x = o.gram[k] || [0, 0], y = b.gram[k]; if (y[1] > x[1]) o.gram[k] = y.slice(); }
   for (const k in b.c) o.c[k] = Math.max(o.c[k] || 0, b.c[k]);
   o.set = (b.t || 0) > (a.t || 0) ? Object.assign({}, a.set, b.set) : a.set;
+  { const seen = new Set((o.saved || []).map(x => x.id)); o.saved = (o.saved || []).concat((b.saved || []).filter(x => !seen.has(x.id))); }
   o.t = Math.max(a.t || 0, b.t || 0);
   return fix(o);
 }
@@ -1574,6 +1577,7 @@ function render() {
   if (TAB === "home") v.innerHTML = homeHtml();
   else if (TAB === "practice") v.innerHTML = practiceHtml();
   else if (TAB === "words") { v.innerHTML = wordsHtml(); bindWords(); }
+  else if (TAB === "trans") { v.innerHTML = transHtml(); bindTrans(); }
   else v.innerHTML = statsHtml();
 }
 function dueCount() { const t = TODAY(); return Object.entries(S.srs).filter(([k, r]) => k[0] !== "g" && r[1] <= t).length; }
@@ -1987,13 +1991,89 @@ function finishSession() {
   SES.finished = true; SES.redo = uniq.map(m => Object.assign({}, m, { requeued: false, opts: null, bank: null, toks: null }));
 }
 
+
+/* ======================= ÜBERSETZEN ======================= */
+// Deutsch sprechen oder tippen → Übersetzung über den kostenlosen Dienst MyMemory (ohne Anmeldung, ca. 5000 Zeichen am Tag)
+let DMODE = "task", TR = { text: "", out: "", busy: false, err: "" };
+const TR_CODE = () => (LANG === "tl" ? "tl" : "en");
+const gtLink = t => "https://translate.google.com/?sl=de&tl=" + TR_CODE() + "&op=translate&text=" + encodeURIComponent(t || "");
+async function translateText(text) {
+  const url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text) + "&langpair=de|" + TR_CODE();
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 12000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal });
+    const j = await r.json();
+    const out = j && j.responseData && j.responseData.translatedText;
+    if (!out || String(j.responseStatus) !== "200" || /^MYMEMORY WARNING/i.test(out)) throw new Error(/USED ALL AVAILABLE/i.test(out || "") ? "limit" : "bad");
+    const tmp = document.createElement("textarea"); tmp.innerHTML = out; // &#39; usw. auflösen
+    return tmp.value.trim();
+  } finally { clearTimeout(timer); }
+}
+function transHtml() {
+  const mic = !!DICT;
+  return `
+  <section><h1 style="font-size:26px">Übersetzen</h1><p class="muted" style="margin:6px 0 0">Deutsch → ${LN}. ${mic ? "Aufs Mikrofon tippen und einen Satz sprechen – oder eintippen." : "Satz eintippen."}</p></section>
+  <section class="card" style="display:grid;gap:12px">
+    ${mic ? `<button class="mic" id="trMic" data-act="trmic" aria-label="Auf Deutsch sprechen">${ICON.mic}</button><div class="hint" id="trHint" style="text-align:center">Tippen und auf Deutsch sprechen</div>` : ""}
+    <textarea id="trIn" rows="3" placeholder="z. B. Ich habe morgen frei." style="font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:2px solid var(--rule);background:var(--sheet);color:var(--ink);resize:vertical">${esc(TR.text)}</textarea>
+    <button class="go" data-act="trgo" ${TR.busy ? "disabled" : ""}>${TR.busy ? "Übersetze …" : "Übersetzen"}</button>
+  </section>
+  <div id="trOut">${trOutHtml()}</div>
+  <section><div class="sec-h" style="margin-bottom:10px"><h2>Gemerkte Sätze</h2><span class="muted" style="font-size:14px">${S.saved.length}</span></div>
+    ${S.saved.length ? `<div class="mist">${S.saved.map(x => `<div class="m"><div><b>${esc(x.t)}</b><br><span class="muted">${esc(x.d)}</span></div>${spk(x.t, "sm")}<button class="icon-btn" data-del="${esc(x.id)}" aria-label="Löschen">${ICON.x}</button></div>`).join("")}</div>`
+      : `<p class="muted" style="margin:0">Noch nichts gemerkt. Nach dem Übersetzen auf „Merken“ tippen.</p>`}
+  </section>
+  <p class="hint" style="margin:0">Die Übersetzung macht der kostenlose Dienst MyMemory im Internet. Dafür wird nur der Satz dorthin geschickt. Maschinelle Übersetzungen können Fehler haben.</p>`;
+}
+function trOutHtml() {
+  if (TR.err) return `<section class="card" style="display:grid;gap:10px;border:2px solid var(--red)"><b>${esc(TR.err)}</b>
+    <a class="go ghost" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box" href="${esc(gtLink(TR.text))}" target="_blank" rel="noopener">Im Google Übersetzer öffnen</a></section>`;
+  if (!TR.out) return "";
+  return `<section class="card" style="display:grid;gap:12px">
+    <div class="label">${LN}</div>
+    <div class="fb-line"><div class="t" style="font-family:var(--f-display);font-weight:800;font-size:24px;color:var(--blue)">${esc(TR.out)}</div>${spk(TR.out)}</div>
+    <div class="muted">${esc(TR.text)}</div>
+    <div class="two"><button class="go ghost" data-say="${esc(TR.out)}" data-slow>Langsam anhören</button><button class="go green" data-act="trsave">Merken</button></div>
+    <a class="hint" href="${esc(gtLink(TR.text))}" target="_blank" rel="noopener">Zum Vergleich im Google Übersetzer öffnen</a>
+  </section>`;
+}
+function bindTrans() {
+  const ta = $("#trIn");
+  ta.addEventListener("input", () => { TR.text = ta.value; });
+  ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doTranslate(); } });
+}
+function trHeard() { const ta = $("#trIn"); if (ta) { ta.value = (HEARD + " " + PARTIAL).trim(); TR.text = ta.value; } }
+function trMicState(state, reason) {
+  const b = $("#trMic"), h = $("#trHint");
+  if (b) b.classList.toggle("on", micOn);
+  if (!h) return;
+  if (state === "listening") h.textContent = "Ich höre zu … nochmal tippen, wenn du fertig bist.";
+  if (state === "idle") {
+    if (reason && reason !== "stopped" && reason !== "viewer_stopped") h.textContent = reason === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst den Satz eintippen." : "Das hat nicht geklappt. Nochmal tippen oder eintippen.";
+    else { h.textContent = "Tippen und auf Deutsch sprechen"; if (HEARD.trim()) doTranslate(); }
+    DMODE = "task";
+  }
+}
+async function doTranslate() {
+  const ta = $("#trIn"); if (ta) TR.text = ta.value;
+  const text = (TR.text || "").trim();
+  if (!text) { toast("Bitte erst einen Satz sprechen oder eintippen."); return; }
+  if (text.length > 450) { toast("Der Text ist zu lang – bitte höchstens ein paar Sätze."); return; }
+  TR.busy = true; TR.err = ""; TR.out = ""; if (TAB === "trans") render();
+  try { TR.out = await translateText(text); }
+  catch (e) { TR.err = !navigator.onLine ? "Kein Internet. Zum Übersetzen braucht die App eine Verbindung." : e.message === "limit" ? "Für heute ist das kostenlose Übersetzungs-Kontingent aufgebraucht. Morgen geht es wieder." : "Die Übersetzung hat gerade nicht geklappt."; }
+  TR.busy = false;
+  if (TAB === "trans") { render(); if (TR.out) say(TR.out); }
+}
+
 /* ---- dictation for the speaking task ---- */
 let HEARD = "", PARTIAL = "", micOn = false;
 function bindDictation() {
-  DICT.onPartial(({ text }) => { PARTIAL = text; const h = $("#heard"); if (h) h.textContent = (HEARD + " " + PARTIAL).trim(); });
-  DICT.onFinal(({ text }) => { HEARD = (HEARD + " " + text).trim(); PARTIAL = ""; const h = $("#heard"); if (h) h.textContent = HEARD; const c = $("#chk"); if (c) c.disabled = !HEARD; });
+  DICT.onPartial(({ text }) => { PARTIAL = text; if (DMODE === "tr") return trHeard(); const h = $("#heard"); if (h) h.textContent = (HEARD + " " + PARTIAL).trim(); });
+  DICT.onFinal(({ text }) => { HEARD = (HEARD + " " + text).trim(); PARTIAL = ""; if (DMODE === "tr") return trHeard(); const h = $("#heard"); if (h) h.textContent = HEARD; const c = $("#chk"); if (c) c.disabled = !HEARD; });
   DICT.onState(({ state, reason }) => {
     micOn = state === "listening" || state === "starting";
+    if (DMODE === "tr") return trMicState(state, reason);
     const b = $("#micBtn"); if (b) b.classList.toggle("on", micOn);
     const hint = $("#micHint");
     if (hint && state === "listening") hint.textContent = "Ich höre zu … tippe auf „Fertig“, wenn du fertig bist.";
@@ -2023,6 +2103,18 @@ function act(a, el) {
     case "showde": $("#deTxt").textContent = t.item.de; return;
     case "testvoice": return say(LANGS[LANG].probe);
     case "voicehelp": return voiceHelp();
+    case "trgo": return doTranslate();
+    case "trmic":
+      if (!DICT) return;
+      if (micOn) { DICT.stop(); return; }
+      DMODE = "tr"; HEARD = ""; PARTIAL = "";
+      { const ta = $("#trIn"); if (ta) ta.value = ""; }
+      DICT.start({ language: "de", lang: "de-DE" }).catch(e => { DMODE = "task"; const h = $("#trHint"); if (h && e && e.code !== "stopped") h.textContent = e.code === "not_granted" ? "Mikrofon ist nicht erlaubt. Du kannst den Satz eintippen." : "Spracherkennung gerade nicht möglich. Bitte eintippen."; });
+      return;
+    case "trsave":
+      if (!TR.out) return;
+      if (!S.saved.some(x => x.t === TR.out && x.d === TR.text)) S.saved.unshift({ id: String(Date.now()), d: TR.text.trim(), t: TR.out });
+      saveLocal(); push(); render(); toast("Gemerkt."); return;
     case "share":
       if (navigator.share) { navigator.share({ title: "Vokabelheft", text: SHARE_TEXT.replace("\n" + APP_URL, ""), url: APP_URL }).catch(() => {}); return; }
       return copyLink();
@@ -2100,6 +2192,8 @@ document.addEventListener("click", e => {
   if (m && !m.disabled) { if (m.dataset.mode === "pics" && !picOn()) return; if (m.dataset.mode === "cards") return cardsSheet(); return startSession(m.dataset.mode); }
   const gc = e.target.closest("[data-gcat]");
   if (gc) return startSession("gram", gc.dataset.gcat);
+  const dl = e.target.closest("[data-del]");
+  if (dl) { S.saved = S.saved.filter(x => x.id !== dl.dataset.del); saveLocal(); push(); render(); toast("Gelöscht."); return; }
   const lg = e.target.closest("[data-lang]");
   if (lg) return switchLang(lg.dataset.lang);
   const st = e.target.closest("[data-set]");
@@ -2177,11 +2271,11 @@ function webDict() {
   const h = {};
   return {
     onPartial(fn) { h.p = fn; }, onFinal(fn) { h.f = fn; }, onState(fn) { h.s = fn; },
-    start() {
+    start(opts = {}) {
       return new Promise((ok, no) => {
         try {
           let reason = "stopped";
-          rec = new SR(); rec.lang = speechLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+          rec = new SR(); rec.lang = opts.lang || speechLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
           h.s && h.s({ state: "starting" });
           rec.onstart = () => { h.s && h.s({ state: "listening" }); ok(); };
           rec.onresult = e => {
