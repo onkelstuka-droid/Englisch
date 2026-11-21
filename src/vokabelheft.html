@@ -270,7 +270,7 @@ main .wrap{display:flex;flex-direction:column;gap:18px;padding-block:18px}
 
 <script>
 /* ======================= LANGUAGE ======================= */
-const APP_VERSION = "1.6.1";
+const APP_VERSION = "1.6.2";
 const APP_URL = "https://onkelstuka-droid.github.io/Englisch/";
 const SHARE_TEXT = "Hallo! Ich lerne gerade Englisch und Tagalog mit der App „Vokabelheft“. Kostenlos, ohne Anmeldung, mit Vorlesen und Übungen. Probier's aus:\n" + APP_URL + "\nTipp: In Chrome oben auf ⋮ → „Zum Startbildschirm hinzufügen“, dann ist es wie eine richtige App.";
 const LANGS = {
@@ -1457,18 +1457,28 @@ function speakSeq(list) {
     for (const t of list) { const u = new SpeechSynthesisUtterance(t); if (v) u.voice = v; u.lang = v ? v.lang : speechLang(); u.rate = 0.85 * S.set.rate; speechSynthesis.speak(u); }
   } catch (e) {}
 }
-const PTEST = [
-  ["aso", "ibon", "isda"],
-  ["Aso.", "Ibon.", "Isda."],
-  ["Aso", "Ibon", "Isda"],
-  ["aaso", "iibon", "iisda"],
-  ["a-so", "i-bon", "is-da"],
-  ["Ito ay aso.", "Ito ay ibon.", "Ito ay isda."]
-];
 /* Tagalog fürs Vorlesen vorbereiten: alles klein (sonst halten Stimmen „Ang“ für eine Abkürzung und buchstabieren A-N-G),
    „ng“ → „nang“ und „mga“ → „manga“, so wie man sie spricht. */
+/* Tagalog-Silbentrennung: a-so, i-bon, is-da, ba-hay, sang-gol („ng“ zählt als ein Laut).
+   Die Filipino-Stimme buchstabiert kurze Wörter sonst (A-S-O); getrennt spricht sie sie als Wort (Nutzer-Test Nr. 5, 1.6.2). */
+function tlSyl(w) {
+  const units = [];
+  for (let i = 0; i < w.length;) { if (w[i] === "n" && w[i + 1] === "g") { units.push("ng"); i += 2; } else { units.push(w[i]); i++; } }
+  const isV = u => "aeiou".includes(u);
+  const vi = units.map((u, i) => (isV(u) ? i : -1)).filter(i => i >= 0);
+  if (vi.length < 2) return w;
+  const cuts = new Set();
+  for (let k = 0; k < vi.length - 1; k++) {
+    const a = vi[k], b = vi[k + 1], nc = b - a - 1;
+    cuts.add(nc === 0 ? b : nc === 1 ? a + 1 : b - 1);
+  }
+  return units.map((u, i) => (cuts.has(i) ? "-" : "") + u).join("");
+}
 function tlSpeak(text) {
-  return text.toLowerCase()
+  const low = text.toLowerCase(), words = (low.match(/[a-zñ]+/g) || []).length;
+  return low
+    // einzelne Wörter / kurze Ausdrücke: alles trennen; in Sätzen nur kurze Wörter (bis 5 Buchstaben)
+    .replace(/[a-zñ]+/g, w => (w === "ng" || w === "mga" || w === "ang" || (words > 3 && w.length > 5)) ? w : tlSyl(w))
     .replace(/(^|[^a-zñ'-])ng(?=$|[^a-zñ'-])/g, "$1nang")
     .replace(/(^|[^a-zñ'-])mga(?=$|[^a-zñ'-])/g, "$1manga")
     .replace(/(^|[^a-zñ'-])ang(?=$|[^a-zñ'-])/g, "$1aang"); // „ang“ wurde als A-N-G buchstabiert; „aang“ klingt laut Nutzer-Test (Nr. 5) richtig
@@ -1734,12 +1744,7 @@ function settingsHtml() {
   <div class="setrow"><div class="label">Stimme</div>${TTS ? seg("voice", [["auto", "Automatisch"], ["device", "Handy-Stimme"], ["claude", "Claude-Stimme"]]) : ""}
     <span class="hint">${devVoice ? `Handy-Stimme: ${esc(devVoice.name)}` : LANG === "tl" ? "Keine Tagalog-Stimme gefunden. Am Handy: Einstellungen → System → Sprachen → Sprachausgabe → Zahnrad bei Google → Sprachdaten installieren → Filipino." : "Keine englische Handy-Stimme gefunden."}${TTS ? " · Die Claude-Stimme klingt natürlicher, hat aber ein Stundenlimit." : ""}</span>
     ${langVoices().length > 1 ? `<select id="voiceSel" style="font:inherit;padding:10px 12px;border-radius:12px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)">${langVoices().map(v => `<option value="${esc(v.name)}" ${devVoice && v.name === devVoice.name ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select>` : ""}
-    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button>
-    ${LANG === "tl" ? `<div class="card" style="display:grid;gap:10px;margin-top:6px;border:2px solid var(--marker)">
-      <b>Aussprache-Test: aso · ibon · isda</b>
-      <span class="hint">Jeder Knopf spricht drei Wörter nacheinander: aso (Hund), ibon (Vogel), isda (Fisch). Bei welchen Nummern werden <b>alle drei als Wort</b> gesprochen und nicht buchstabiert?</span>
-      <div class="seg">${PTEST.map((v, i) => `<button data-ptest="${i}">${i + 1}</button>`).join("")}</div>
-    </div>` : ""}</div>
+    <button class="go ghost" data-act="testvoice" style="width:auto;justify-self:start;padding:10px 16px">Probe: „${LANGS[LANG].probe}“</button></div>
   <div class="setrow"><div class="label">Sprechtempo</div>${seg("rate", [["0.8", "Langsam"], ["1", "Normal"], ["1.15", "Schnell"]])}</div>
   <div class="setrow"><div class="label">Wörter automatisch vorlesen</div>${seg("auto", [["true", "An"], ["false", "Aus"]])}</div>
   <div class="setrow"><div class="label">Bildchen bei Wörtern</div>${seg("pics", [["true", "An"], ["false", "Aus"]])}</div>
@@ -2257,8 +2262,6 @@ document.addEventListener("click", e => {
   if (m && !m.disabled) { if (m.dataset.mode === "pics" && !picOn()) return; if (m.dataset.mode === "cards") return cardsSheet(); return startSession(m.dataset.mode); }
   const gc = e.target.closest("[data-gcat]");
   if (gc) return startSession("gram", gc.dataset.gcat);
-  const pt = e.target.closest("[data-ptest]");
-  if (pt) { speakSeq(PTEST[+pt.dataset.ptest]); return; }
   const dl = e.target.closest("[data-del]");
   if (dl) { S.saved = S.saved.filter(x => x.id !== dl.dataset.del); saveLocal(); push(); render(); toast("Gelöscht."); return; }
   const lg = e.target.closest("[data-lang]");
